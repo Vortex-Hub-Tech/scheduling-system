@@ -29,15 +29,23 @@ export default function BookingPage() {
     enabled: !!service,
   });
 
-  const { data: availableSlots = [] } = useQuery({
-    queryKey: service ? [`/api/available-slots/${service.professionalId}/${serviceId}`] : [],
+  const { data: businessHours = [] } = useQuery({
+    queryKey: service ? [`/api/business-hours/${service.professionalId}`] : [],
+    enabled: !!service,
+  });
+
+  const { data: existingBookings = [] } = useQuery({
+    queryKey: service ? [`/api/bookings/professional/${service.professionalId}`] : [],
     enabled: !!service,
   });
 
   const createBookingMutation = useMutation({
     mutationFn: async (data: any) => {
       const res = await apiRequest('POST', '/api/bookings', data);
-      if (!res.ok) throw new Error('Failed to create booking');
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Failed to create booking');
+      }
       return res.json();
     },
     onSuccess: (booking) => {
@@ -78,17 +86,58 @@ export default function BookingPage() {
   };
 
   const isDateAvailable = (date: Date) => {
-    const dateStr = date.toDateString();
-    return availableSlots.some((slot: any) => 
-      new Date(slot.slotDate).toDateString() === dateStr
+    const dayOfWeek = date.getDay();
+    return businessHours.some((hour: any) => 
+      hour.dayOfWeek === dayOfWeek && hour.isActive
     );
   };
 
   const getSlotsForDate = (date: Date) => {
-    const dateStr = date.toDateString();
-    return availableSlots.filter((slot: any) => 
-      new Date(slot.slotDate).toDateString() === dateStr
+    if (!service) return [];
+    
+    const dayOfWeek = date.getDay();
+    const todayHours = businessHours.filter((hour: any) => 
+      hour.dayOfWeek === dayOfWeek && hour.isActive
     );
+
+    if (!todayHours.length) return [];
+
+    const slots: any[] = [];
+    const dateStr = date.toDateString();
+
+    // Get existing bookings for this date
+    const bookedTimes = existingBookings
+      .filter((booking: any) => {
+        const bookingDate = new Date(booking.bookingDate);
+        return bookingDate.toDateString() === dateStr;
+      })
+      .map((booking: any) => new Date(booking.bookingDate).getTime());
+
+    todayHours.forEach((hour: any) => {
+      const [startHour, startMinute] = hour.startTime.split(':').map(Number);
+      const [endHour, endMinute] = hour.endTime.split(':').map(Number);
+
+      const startTime = new Date(date);
+      startTime.setHours(startHour, startMinute, 0, 0);
+
+      const endTime = new Date(date);
+      endTime.setHours(endHour, endMinute, 0, 0);
+
+      for (let time = new Date(startTime); time < endTime; time.setMinutes(time.getMinutes() + service.duration)) {
+        const slotTime = new Date(time);
+        
+        // Check if this time slot is already booked
+        if (!bookedTimes.includes(slotTime.getTime())) {
+          slots.push({
+            id: `${date.toISOString()}-${slotTime.getHours()}-${slotTime.getMinutes()}`,
+            slotDate: slotTime.toISOString(),
+            isAvailable: true
+          });
+        }
+      }
+    });
+
+    return slots;
   };
 
   const monthNames = [
@@ -164,7 +213,7 @@ export default function BookingPage() {
     createBookingMutation.mutate({
       serviceId: parseInt(serviceId!),
       professionalId: service.professionalId,
-      slotId: selectedSlot.id,
+      bookingDate: selectedSlot.slotDate,
       customerName,
       customerPhone,
       customerEmail,

@@ -49,6 +49,7 @@ export interface IStorage {
   getBookingsByUser(userId: string): Promise<Booking[]>;
   getBookingsByEmail(email: string): Promise<Booking[]>;
   getBookingsByPhone(phone: string): Promise<Booking[]>;
+  getBookingsByProfessional(professionalId: number): Promise<Booking[]>;
   getAllBookings(): Promise<Booking[]>;
   updateBooking(id: number, data: Partial<InsertBooking>): Promise<Booking>;
 
@@ -249,6 +250,14 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(professionals, eq(bookings.professionalId, professionals.id))
       .where(eq(bookings.customerPhone, phone))
       .orderBy(desc(bookings.createdAt));
+  }
+
+  async getBookingsByProfessional(professionalId: number): Promise<Booking[]> {
+    return await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.professionalId, professionalId))
+      .orderBy(desc(bookings.bookingDate));
   }
 
   async getAllBookings(): Promise<Booking[]> {

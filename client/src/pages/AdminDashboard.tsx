@@ -267,191 +267,7 @@ function ManageBusinessHours() {
   );
 }
 
-function ManageAvailableSlots() {
-  const queryClient = useQueryClient();
-  const [selectedProfessional, setSelectedProfessional] = useState('');
-  const [selectedService, setSelectedService] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
-  const [generateDays, setGenerateDays] = useState(7);
 
-  const { data: professionals = [] } = useQuery({ queryKey: ['/api/professionals'] });
-  const { data: services = [] } = useQuery({ queryKey: ['/api/services'] });
-
-  const filteredServices = services.filter((service: any) => 
-    selectedProfessional ? service.professionalId === parseInt(selectedProfessional) : false
-  );
-
-  const { data: availableSlots = [] } = useQuery({
-    queryKey: selectedProfessional && selectedService ? [`/api/available-slots/${selectedProfessional}/${selectedService}`] : [],
-    enabled: !!(selectedProfessional && selectedService),
-  });
-
-  const createSlotsMutation = useMutation({
-    mutationFn: async (slots: any[]) => {
-      const promises = slots.map(slot => 
-        apiRequest('POST', '/api/available-slots', slot)
-      );
-      return Promise.all(promises);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/available-slots/${selectedProfessional}/${selectedService}`] });
-      setTimeSlots([]);
-    },
-  });
-
-  const deleteSlotMutation = useMutation({
-    mutationFn: async (slotId: number) => {
-      const res = await apiRequest('DELETE', `/api/available-slots/${slotId}`);
-      if (!res.ok) throw new Error('Failed to delete slot');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/available-slots/${selectedProfessional}/${selectedService}`] });
-    },
-  });
-
-  const generateSlotsMutation = useMutation({
-    mutationFn: async ({ professionalId, serviceId, date }: any) => {
-      const res = await apiRequest('POST', `/api/generate-slots/${professionalId}/${serviceId}`, { date });
-      if (!res.ok) throw new Error('Failed to generate slots');
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/available-slots/${selectedProfessional}/${selectedService}`] });
-      alert('Horários gerados com sucesso!');
-    },
-  });
-
-  const generateSlotsForDays = async () => {
-    if (!selectedProfessional || !selectedService) {
-      alert('Selecione profissional e serviço');
-      return;
-    }
-
-    const startDate = selectedDate ? new Date(selectedDate) : new Date();
-    
-    for (let i = 0; i < generateDays; i++) {
-      const currentDate = new Date(startDate);
-      currentDate.setDate(startDate.getDate() + i);
-      
-      try {
-        await generateSlotsMutation.mutateAsync({
-          professionalId: parseInt(selectedProfessional),
-          serviceId: parseInt(selectedService),
-          date: currentDate.toISOString(),
-        });
-      } catch (error) {
-        console.error(`Error generating slots for ${currentDate.toDateString()}:`, error);
-      }
-    }
-  };
-
-  const handleCreateSlots = () => {
-    if (!selectedProfessional || !selectedService || timeSlots.length === 0) return;
-
-    createSlotsMutation.mutate(timeSlots);
-  };
-
-  return (
-    <div>
-      <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '2rem' }}>Gerenciar Horários Disponíveis</h2>
-
-      <div className="card" style={{ marginBottom: '2rem' }}>
-        <h3 style={{ marginBottom: '1rem' }}>Criar Novos Horários</h3>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-          <select className="input" value={selectedProfessional} onChange={e => setSelectedProfessional(e.target.value)}>
-            <option value="">Selecione o Profissional</option>
-            {professionals.map((prof: any) => (
-              <option key={prof.id} value={prof.id}>{prof.name}</option>
-            ))}
-          </select>
-
-          <select className="input" value={selectedService} onChange={e => setSelectedService(e.target.value)} disabled={!selectedProfessional}>
-            <option value="">Selecione o Serviço</option>
-            {filteredServices.map((service: any) => (
-              <option key={service.id} value={service.id}>{service.name}</option>
-            ))}
-          </select>
-
-          <input 
-            type="date" 
-            className="input" 
-            value={selectedDate} 
-            onChange={e => setSelectedDate(e.target.value)}
-            min={new Date().toISOString().split('T')[0]}
-          />
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '600' }}>Data Inicial</label>
-            <input 
-              type="date" 
-              className="input" 
-              value={selectedDate} 
-              onChange={e => setSelectedDate(e.target.value)}
-              min={new Date().toISOString().split('T')[0]}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '600' }}>Quantidade de Dias</label>
-            <input type="number" className="input" value={generateDays} onChange={e => setGenerateDays(parseInt(e.target.value))} min="1" max="30" />
-          </div>
-        </div>
-
-        <div style={{ marginBottom: '1rem', padding: '1rem', background: '#e6f3ff', borderRadius: '0.5rem' }}>
-          <p style={{ fontSize: '0.875rem', color: '#0066cc', margin: 0 }}>
-            📅 Os horários serão gerados automaticamente baseados nos horários de funcionamento configurados para este profissional.
-          </p>
-        </div>
-
-        <button 
-          onClick={generateSlotsForDays} 
-          className="btn btn-primary" 
-          disabled={generateSlotsMutation.isPending || !selectedProfessional || !selectedService}
-        >
-          {generateSlotsMutation.isPending ? 'Gerando...' : `Gerar Horários para ${generateDays} dias`}
-        </button>
-      </div>
-
-      {selectedProfessional && selectedService && (
-        <div className="card">
-          <h3 style={{ marginBottom: '1rem' }}>Horários Existentes</h3>
-          {availableSlots.length === 0 ? (
-            <p style={{ color: 'var(--text-light)' }}>Nenhum horário disponível encontrado.</p>
-          ) : (
-            <div style={{ display: 'grid', gap: '0.5rem' }}>
-              {availableSlots.map((slot: any) => (
-                <div key={slot.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--bg-light)', borderRadius: '0.5rem' }}>
-                  <div>
-                    <span style={{ fontWeight: '600' }}>
-                      {new Date(slot.slotDate).toLocaleDateString('pt-BR')}
-                    </span>
-                    <span style={{ marginLeft: '1rem' }}>
-                      {new Date(slot.slotDate).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                    {slot.isBooked && (
-                      <span style={{ marginLeft: '1rem', color: 'var(--error)', fontSize: '0.875rem' }}>(Reservado)</span>
-                    )}
-                  </div>
-                  {!slot.isBooked && (
-                    <button 
-                      onClick={() => deleteSlotMutation.mutate(slot.id)}
-                      className="btn"
-                      style={{ background: 'var(--error)', color: 'white', padding: '0.25rem 0.5rem', fontSize: '0.875rem' }}
-                    >
-                      Remover
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
 
 function ManageServices() {
   const queryClient = useQueryClient();
@@ -762,7 +578,7 @@ export default function AdminDashboard() {
           <Link to="/admin/professionals" className="btn btn-outline">Profissionais</Link>
           <Link to="/admin/services" className="btn btn-outline">Serviços</Link>
           <Link to="/admin/business-hours" className="btn btn-outline">Horários de Funcionamento</Link>
-          <Link to="/admin/slots" className="btn btn-outline">Horários Disponíveis</Link>
+          
           <Link to="/admin/bookings" className="btn btn-outline">Agendamentos</Link>
         </div>
 
@@ -771,7 +587,7 @@ export default function AdminDashboard() {
           <Route path="/professionals" element={<ManageProfessionals />} />
           <Route path="/services" element={<ManageServices />} />
           <Route path="/business-hours" element={<ManageBusinessHours />} />
-          <Route path="/slots" element={<ManageAvailableSlots />} />
+          
           <Route path="/bookings" element={<ManageBookings />} />
         </Routes>
       </div>

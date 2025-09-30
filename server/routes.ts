@@ -219,27 +219,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/bookings', async (req, res) => {
     try {
-      const { slotId, ...bookingData } = req.body;
-
-      // Get the slot information
-      const slots = await storage.getAvailableSlots(bookingData.professionalId, bookingData.serviceId);
-      const slot = slots.find(s => s.id === slotId);
-
-      if (!slot) {
-        return res.status(400).json({ message: "Selected time slot is no longer available" });
-      }
-
-      const booking = await storage.createBooking({
-        ...bookingData,
-        bookingDate: new Date(slot.slotDate),
+      const bookingData = {
+        ...req.body,
+        bookingDate: new Date(req.body.bookingDate),
         status: 'pending',
         paymentStatus: 'pending',
         phoneVerified: false,
+      };
+
+      // Check for existing bookings at the same time
+      const existingBookings = await storage.getBookingsByProfessional(bookingData.professionalId);
+      const conflictingBooking = existingBookings.find((booking: any) => {
+        const existingTime = new Date(booking.bookingDate).getTime();
+        const newTime = bookingData.bookingDate.getTime();
+        return existingTime === newTime && booking.status !== 'cancelled';
       });
 
-      // Mark the slot as booked
-      await storage.bookSlot(slotId);
+      if (conflictingBooking) {
+        return res.status(400).json({ message: "Este horário já está ocupado. Por favor, selecione outro horário." });
+      }
 
+      const booking = await storage.createBooking(bookingData);
       res.status(201).json(booking);
     } catch (error) {
       console.error("Error creating booking:", error);
@@ -298,6 +298,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching bookings:", error);
       res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+
+  app.get('/api/bookings/professional/:professionalId', async (req, res) => {
+    try {
+      const professionalId = parseInt(req.params.professionalId);
+      const bookings = await storage.getBookingsByProfessional(professionalId);
+      res.json(bookings);
+    } catch (error) {
+      console.error("Error fetching professional bookings:", error);
+      res.status(500).json({ message: "Failed to fetch professional bookings" });
     }
   });
 
