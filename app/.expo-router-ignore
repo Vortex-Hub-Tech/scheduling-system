@@ -1,0 +1,6 @@
+
+components/**/*
+constants/**/*
+contexts/**/*
+hooks/**/*
+lib/**/*
