@@ -13,12 +13,17 @@ Sistema completo de agendamento de serviços profissionais com pagamento integra
 - **Pagamentos**: Stripe para processamento seguro
 - **Localização**: API em português brasileiro
 
-### Frontend (React + Vite + TypeScript)
-- **Porta**: 5000
+### Mobile App (React Native + Expo)
+- **Framework**: Expo Router (File-based routing)
+- **Plataformas**: iOS, Android, Web
+- **API Communication**: Conecta ao backend via HTTP requests
+- **Navegação**: Tab-based navigation com telas para Início e Serviços
+- **Estilo**: React Native StyleSheet
+
+### Frontend Web (React + Vite + TypeScript) - Legacy
+- **Nota**: O frontend web original está em `client/` mas o foco agora é no app mobile
+- **Porta**: 5000 (quando executado)
 - **Framework**: React 19 com React Router
-- **Estado**: TanStack Query (React Query)
-- **Build**: Vite
-- **Estilo**: CSS customizado com tema profissional
 
 ## Estrutura do Banco de Dados
 
@@ -103,12 +108,45 @@ Para sincronizar status de pagamento automaticamente, configure webhook em:
 ## Scripts Disponíveis
 
 ```bash
+# Mobile App (Expo)
+npm start             # Inicia Expo (mostra QR code para Expo Go)
+npm run android       # Abre no emulador Android
+npm run ios           # Abre no simulador iOS (apenas Mac)
+npm run web           # Abre versão web do app mobile
+
+# Backend
 npm run dev:server    # Inicia backend (porta 3000)
-npm run dev:client    # Inicia frontend (porta 5000)
+
+# Database
 npm run db:push       # Sincroniza schema do banco
 npm run db:studio     # Abre Drizzle Studio
-npm run build         # Build do frontend
+
+# Legacy Web Frontend
+npm run dev:client    # Inicia frontend web React+Vite (porta 5000)
+npm run build         # Build do frontend web
 ```
+
+## Como Usar o App Mobile
+
+### Desenvolvimento
+1. **No seu celular**: Instale o aplicativo Expo Go (Android/iOS)
+2. **No Replit**: O workflow "Expo App" já está rodando
+3. **Escaneie o QR Code**: Visível nos logs do workflow "Expo App"
+4. **Backend**: Certifique-se que o workflow "Backend API" está rodando
+
+### Estrutura do App Mobile
+```
+app/
+├── (tabs)/           # Navegação por abas
+│   ├── index.tsx     # Tela inicial com cards de navegação
+│   ├── explore.tsx   # Tela de serviços (lista serviços do backend)
+│   └── _layout.tsx   # Configuração das abas
+├── _layout.tsx       # Layout raiz do app
+└── +not-found.tsx    # Tela de erro 404
+```
+
+### Conectando ao Backend
+O app mobile se conecta automaticamente ao backend Express na porta 3000. A configuração está em `lib/api.ts` e detecta automaticamente o IP correto em desenvolvimento.
 
 ## Contato WhatsApp
 
