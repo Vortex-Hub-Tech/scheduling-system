@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const getApiUrl = () => {
   if (__DEV__) {
@@ -29,11 +30,18 @@ export async function apiRequest(
 ): Promise<Response> {
   const url = `${API_URL}${endpoint}`;
   
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  const token = await AsyncStorage.getItem('authToken');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
   const options: RequestInit = {
     method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers,
     credentials: 'include',
   };
 

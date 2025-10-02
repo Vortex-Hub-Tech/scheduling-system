@@ -1,21 +1,19 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import * as SecureStore from 'expo-secure-store';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiRequest } from '../lib/api';
 
 interface User {
-  id: string;
+  id: number;
+  name: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
-  isAdmin: boolean;
+  role: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, firstName?: string, lastName?: string) => Promise<void>;
+  register: (name: string, email: string, password: string, phone: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -23,97 +21,62 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadStoredAuth();
+    checkAuth();
   }, []);
 
-  const loadStoredAuth = async () => {
+  const checkAuth = async () => {
     try {
-      const storedToken = await SecureStore.getItemAsync('authToken');
-      if (storedToken) {
-        setToken(storedToken);
-        await fetchCurrentUser(storedToken);
+      const token = await AsyncStorage.getItem('authToken');
+      if (token) {
+        const res = await apiRequest('GET', '/api/auth/me');
+        if (res.ok) {
+          const userData = await res.json();
+          setUser(userData);
+        } else {
+          await AsyncStorage.removeItem('authToken');
+        }
       }
     } catch (error) {
-      console.error('Error loading auth:', error);
+      console.error('Auth check error:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchCurrentUser = async (authToken: string) => {
-    try {
-      const { API_URL } = await import('../lib/api');
-      const response = await fetch(`${API_URL}/api/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-        },
-      });
-
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      } else {
-        await logout();
-      }
-    } catch (error) {
-      console.error('Error fetching user:', error);
-      await logout();
-    }
-  };
-
   const login = async (email: string, password: string) => {
-    try {
-      const response = await apiRequest('POST', '/api/auth/login', { email, password });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao fazer login');
-      }
-
-      const data = await response.json();
-      await SecureStore.setItemAsync('authToken', data.token);
-      setToken(data.token);
+    const res = await apiRequest('POST', '/api/auth/login', { email, password });
+    if (res.ok) {
+      const data = await res.json();
+      await AsyncStorage.setItem('authToken', data.token);
       setUser(data.user);
-    } catch (error: any) {
-      throw error;
+    } else {
+      const error = await res.json();
+      throw new Error(error.message || 'Login failed');
     }
   };
 
-  const register = async (email: string, password: string, firstName?: string, lastName?: string) => {
-    try {
-      const response = await apiRequest('POST', '/api/auth/register', {
-        email,
-        password,
-        firstName,
-        lastName,
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao criar conta');
-      }
-
-      const data = await response.json();
-      await SecureStore.setItemAsync('authToken', data.token);
-      setToken(data.token);
+  const register = async (name: string, email: string, password: string, phone: string) => {
+    const res = await apiRequest('POST', '/api/auth/register', { name, email, password, phone });
+    if (res.ok) {
+      const data = await res.json();
+      await AsyncStorage.setItem('authToken', data.token);
       setUser(data.user);
-    } catch (error: any) {
-      throw error;
+    } else {
+      const error = await res.json();
+      throw new Error(error.message || 'Registration failed');
     }
   };
 
   const logout = async () => {
-    await SecureStore.deleteItemAsync('authToken');
-    setToken(null);
+    await AsyncStorage.removeItem('authToken');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
