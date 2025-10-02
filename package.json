@@ -1,14 +1,18 @@
 {
   "name": "booking-system",
-  "main": "server/index.ts",
+  "main": "expo-router/entry",
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
     "dev:server": "tsx watch server/index.ts",
     "dev:client": "vite",
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
     "build": "vite build",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "reset-project": "node ./scripts/reset-project.js"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",

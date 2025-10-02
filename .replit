@@ -24,10 +24,6 @@ localPort = 8082
 localPort = 41141
 externalPort = 3001
 
-[[ports]]
-localPort = 41203
-externalPort = 3002
-
 [workflows]
 runButton = "Project"
 
@@ -82,7 +78,7 @@ args = "Backend API"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Frontend"
+args = "Expo App"
 
 [[workflows.workflow]]
 name = "Backend API"
@@ -97,16 +93,15 @@ waitForPort = 3000
 outputType = "console"
 
 [[workflows.workflow]]
-name = "Frontend"
+name = "Expo App"
 author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev:client"
-waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"
+args = "npx expo start"
 
 [agent]
 expertMode = true

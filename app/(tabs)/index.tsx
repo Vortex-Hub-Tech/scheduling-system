@@ -1,80 +1,146 @@
-import { Image } from "expo-image";
-import { Platform, StyleSheet } from "react-native";
-
-import { HelloWave } from "@/components/HelloWave";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
+  const router = useRouter();
+
+  const handleWhatsApp = () => {
+    const phone = '5547996885117';
+    const message = encodeURIComponent('Olá! Gostaria de mais informações sobre os serviços.');
+    Linking.openURL(`whatsapp://send?phone=${phone}&text=${message}`);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
-      }
-    >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Replit + Expo</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
-          to see changes. Press{" "}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: "cmd + d",
-              android: "cmd + m",
-              web: "F12",
-            })}
-          </ThemedText>{" "}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">
-            npm run reset-project
-          </ThemedText>{" "}
-          to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "}
-          directory. This will move the current{" "}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Bem-vindo ao Sistema de Agendamentos</Text>
+        <Text style={styles.subtitle}>
+          Escolha entre nossos serviços profissionais e agende com facilidade
+        </Text>
+      </View>
+
+      <View style={styles.cardsContainer}>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => router.push('/services')}
+        >
+          <Text style={styles.cardIcon}>✂️</Text>
+          <Text style={styles.cardTitle}>Ver Serviços</Text>
+          <Text style={styles.cardDescription}>
+            Explore todos os serviços disponíveis
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => router.push('/gallery')}
+        >
+          <Text style={styles.cardIcon}>🖼️</Text>
+          <Text style={styles.cardTitle}>Galeria</Text>
+          <Text style={styles.cardDescription}>
+            Veja nosso portfólio de trabalhos
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => router.push('/reviews')}
+        >
+          <Text style={styles.cardIcon}>⭐</Text>
+          <Text style={styles.cardTitle}>Avaliações</Text>
+          <Text style={styles.cardDescription}>
+            Confira o que dizem nossos clientes
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => router.push('/my-bookings')}
+        >
+          <Text style={styles.cardIcon}>📋</Text>
+          <Text style={styles.cardTitle}>Meus Agendamentos</Text>
+          <Text style={styles.cardDescription}>
+            Veja seus agendamentos
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity style={styles.whatsappButton} onPress={handleWhatsApp}>
+        <Text style={styles.whatsappIcon}>💬</Text>
+        <Text style={styles.whatsappText}>Fale Conosco</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
   },
-  stepContainer: {
-    gap: 8,
+  header: {
+    padding: 24,
+    backgroundColor: '#2563eb',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#e0e7ff',
+    textAlign: 'center',
+  },
+  cardsContainer: {
+    padding: 16,
+    gap: 16,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1e293b',
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
+  cardDescription: {
+    fontSize: 14,
+    color: '#64748b',
+    textAlign: 'center',
+  },
+  whatsappButton: {
+    backgroundColor: '#25d366',
+    margin: 16,
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  whatsappIcon: {
+    fontSize: 24,
+  },
+  whatsappText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
