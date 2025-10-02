@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useState, useEffect } from 'react';
-import { apiRequest } from '@/lib/api';
+import { apiRequest } from '../lib/api';
 
 export default function ServicesScreen() {
   const [services, setServices] = useState<any[]>([]);

@@ -7,6 +7,6 @@ config.resolver.blacklistRE = /(server|client)\/.*|index\.html|vite\.config\.ts|
 
 config.resolver.sourceExts = [...config.resolver.sourceExts, 'cjs'];
 
-config.watchFolders = [path.resolve(__dirname, 'app'), path.resolve(__dirname, 'components'), path.resolve(__dirname, 'constants'), path.resolve(__dirname, 'hooks'), path.resolve(__dirname, 'shared')];
+config.watchFolders = [path.resolve(__dirname, 'app'), path.resolve(__dirname, 'app/components'), path.resolve(__dirname, 'app/constants'), path.resolve(__dirname, 'app/hooks'), path.resolve(__dirname, 'shared')];
 
 module.exports = config;

@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { apiRequest } from '@/lib/api';
+import { apiRequest } from '../lib/api';
 
 interface User {
   id: string;
@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchCurrentUser = async (authToken: string) => {
     try {
-      const { API_URL } = await import('@/lib/api');
+      const { API_URL } = await import('../lib/api');
       const response = await fetch(`${API_URL}/api/auth/me`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,

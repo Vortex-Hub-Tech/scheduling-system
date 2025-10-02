@@ -5,8 +5,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { useColorScheme } from './hooks/useColorScheme';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
