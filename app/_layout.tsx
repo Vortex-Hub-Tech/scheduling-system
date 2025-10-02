@@ -18,10 +18,11 @@ function RootLayoutNav() {
     if (loading) return;
 
     const inAuthGroup = segments[0] === '(tabs)';
+    const inAuthScreen = segments[0] === 'login' || segments[0] === 'register';
 
     if (!user && inAuthGroup) {
       router.replace('/login');
-    } else if (user && !inAuthGroup) {
+    } else if (user && (inAuthScreen || segments.length === 0)) {
       router.replace('/(tabs)');
     }
   }, [user, loading, segments]);
