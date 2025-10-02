@@ -1,8 +1,10 @@
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'expo-router';
 import { apiRequest } from '../lib/api';
 
 export default function ServicesScreen() {
+  const router = useRouter();
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,14 +58,22 @@ export default function ServicesScreen() {
       ) : (
         <View style={styles.servicesContainer}>
           {services.map((service) => (
-            <View key={service.id} style={styles.serviceCard}>
+            <TouchableOpacity
+              key={service.id}
+              style={styles.serviceCard}
+              onPress={() => router.push({
+                pathname: '/service-details',
+                params: { id: service.id }
+              })}
+            >
               <Text style={styles.serviceName}>{service.name}</Text>
               <Text style={styles.serviceDescription}>{service.description}</Text>
               <View style={styles.serviceDetails}>
                 <Text style={styles.servicePrice}>R$ {parseFloat(service.price).toFixed(2)}</Text>
                 <Text style={styles.serviceDuration}>⏱️ {service.duration} min</Text>
               </View>
-            </View>
+              <Text style={styles.viewDetails}>Ver detalhes →</Text>
+            </TouchableOpacity>
           ))}
         </View>
       )}
@@ -140,5 +150,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#64748b',
     textAlign: 'center',
+  },
+  viewDetails: {
+    fontSize: 14,
+    color: '#2563eb',
+    fontWeight: 'bold',
+    marginTop: 8,
+    textAlign: 'right',
   },
 });

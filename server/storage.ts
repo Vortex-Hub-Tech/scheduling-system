@@ -59,6 +59,7 @@ export interface IStorage {
   getReviewsByProfessional(professionalId: number): Promise<Review[]>;
   getAllReviews(): Promise<Review[]>;
 
+  getAllGalleryImages(): Promise<GalleryImage[]>;
   getGalleryImagesByProfessional(professionalId: number): Promise<GalleryImage[]>;
   createGalleryImage(data: InsertGalleryImage): Promise<GalleryImage>;
   deleteGalleryImage(id: number): Promise<void>;
@@ -300,6 +301,10 @@ export class DatabaseStorage implements IStorage {
 
   async getAllReviews(): Promise<Review[]> {
     return await db.select().from(reviews).orderBy(desc(reviews.createdAt));
+  }
+
+  async getAllGalleryImages(): Promise<GalleryImage[]> {
+    return await db.select().from(galleryImages).orderBy(galleryImages.displayOrder, galleryImages.createdAt);
   }
 
   async getGalleryImagesByProfessional(professionalId: number): Promise<GalleryImage[]> {

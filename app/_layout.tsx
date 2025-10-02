@@ -32,6 +32,11 @@ function RootLayoutNav() {
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="register" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="service-details" options={{ headerShown: false }} />
+        <Stack.Screen name="booking" options={{ headerShown: false }} />
+        <Stack.Screen name="my-bookings" options={{ headerShown: false }} />
+        <Stack.Screen name="gallery" options={{ headerShown: false }} />
+        <Stack.Screen name="reviews" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />

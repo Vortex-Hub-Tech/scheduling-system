@@ -48,17 +48,18 @@ Sistema completo de agendamento de serviços profissionais com pagamento integra
 
 ## Funcionalidades Implementadas
 
-### Para Usuários
-- ✅ Landing page atrativa para usuários não autenticados
-- ✅ Sistema de login/cadastro via Replit Auth (Google, GitHub, email)
-- ✅ Listagem de serviços disponíveis com filtros
+### Para Usuários (App Mobile)
+- ✅ Sistema de login/cadastro com email e senha (autenticação JWT)
+- ✅ Tela inicial com navegação por cards
+- ✅ Listagem de serviços disponíveis
+- ✅ Visualização de detalhes de cada serviço
 - ✅ Agendamento de serviços com seleção de data/hora
-- ✅ Pagamento integrado via Stripe (cartão de crédito)
-- ✅ Visualização de agendamentos (histórico e pendentes)
-- ✅ Sistema de avaliações com estrelas e comentários
+- ✅ Formulário de agendamento com dados do cliente
+- ✅ Visualização de agendamentos pessoais
 - ✅ Galeria de trabalhos dos profissionais
-- ✅ Página de informações detalhadas do profissional com localização
-- ✅ Botão flutuante de WhatsApp (número: 47996885117)
+- ✅ Sistema de avaliações com estrelas e comentários
+- ✅ Botão de contato via WhatsApp
+- ✅ Navegação fluida com Expo Router
 
 ### Para Administradores
 - ✅ Painel administrativo completo (rota /admin)
@@ -79,15 +80,27 @@ Para tornar um usuário administrador:
 UPDATE users SET is_admin = true WHERE email = 'seu-email@exemplo.com';
 ```
 
-## Fluxo de Uso
+## Fluxo de Uso (App Mobile)
 
-1. **Usuário não autenticado**: Vê landing page → Clica em "Entrar/Cadastrar"
-2. **Login via Replit Auth**: Escolhe método (Google, GitHub, etc)
-3. **Página inicial**: Vê cards de navegação e profissionais disponíveis
-4. **Escolher serviço**: Navega para "Serviços" → Seleciona um serviço
-5. **Agendar**: Preenche data, horário e observações
-6. **Pagamento**: Completa pagamento via Stripe
-7. **Confirmação**: Agendamento confirmado e visível em "Meus Agendamentos"
+1. **Primeiro acesso**: Usuário vê tela de login
+2. **Criar conta**: Clica em "Cadastre-se" → Preenche email, senha, nome
+3. **Login**: Insere credenciais → Sistema autentica via JWT
+4. **Página inicial**: Vê cards de navegação (Serviços, Galeria, Avaliações, Meus Agendamentos)
+5. **Escolher serviço**: 
+   - Vai para aba "Serviços"
+   - Clica em um serviço para ver detalhes
+   - Vê informações do profissional, preço, duração
+6. **Agendar**: 
+   - Clica em "Agendar Agora"
+   - Seleciona data e horário
+   - Preenche nome, telefone, email (opcional)
+   - Adiciona observações (opcional)
+   - Confirma agendamento
+7. **Visualizar agendamentos**: Acessa "Meus Agendamentos" na tela inicial
+8. **Outros recursos**:
+   - Visualiza galeria de trabalhos
+   - Lê avaliações de outros clientes
+   - Contata via WhatsApp
 
 ## Integração Stripe
 
@@ -132,21 +145,42 @@ npm run build         # Build do frontend web
 1. **No seu celular**: Instale o aplicativo Expo Go (Android/iOS)
 2. **No Replit**: O workflow "Expo App" já está rodando
 3. **Escaneie o QR Code**: Visível nos logs do workflow "Expo App"
-4. **Backend**: Certifique-se que o workflow "Backend API" está rodando
+4. **Backend**: Certifique-se que o workflow "Backend" está rodando na porta 3000
 
 ### Estrutura do App Mobile
 ```
 app/
-├── (tabs)/           # Navegação por abas
-│   ├── index.tsx     # Tela inicial com cards de navegação
-│   ├── explore.tsx   # Tela de serviços (lista serviços do backend)
-│   └── _layout.tsx   # Configuração das abas
-├── _layout.tsx       # Layout raiz do app
-└── +not-found.tsx    # Tela de erro 404
+├── (tabs)/               # Navegação por abas
+│   ├── index.tsx         # Tela inicial com cards de navegação
+│   ├── explore.tsx       # Tela de serviços (lista serviços do backend)
+│   └── _layout.tsx       # Configuração das abas
+├── contexts/
+│   └── AuthContext.tsx   # Gerenciamento de autenticação com JWT
+├── lib/
+│   └── api.ts            # Configuração de API requests
+├── login.tsx             # Tela de login
+├── register.tsx          # Tela de cadastro
+├── service-details.tsx   # Detalhes do serviço
+├── booking.tsx           # Formulário de agendamento
+├── my-bookings.tsx       # Lista de agendamentos do usuário
+├── gallery.tsx           # Galeria de imagens
+├── reviews.tsx           # Avaliações dos serviços
+├── _layout.tsx           # Layout raiz do app
+└── +not-found.tsx        # Tela de erro 404
 ```
 
 ### Conectando ao Backend
-O app mobile se conecta automaticamente ao backend Express na porta 3000. A configuração está em `lib/api.ts` e detecta automaticamente o IP correto em desenvolvimento.
+O app mobile se conecta automaticamente ao backend Express na porta 3000. A configuração está em `app/lib/api.ts` e detecta automaticamente o IP correto em desenvolvimento:
+- No emulador/celular: Detecta o IP da máquina via Expo
+- Na web: Usa localhost:3000
+- Em produção: Usa a variável EXPO_PUBLIC_API_URL
+
+### Autenticação
+O app usa autenticação JWT (JSON Web Tokens):
+- Tokens são armazenados com segurança via Expo SecureStore
+- Login e registro com email/senha
+- Tokens válidos por 7 dias
+- AuthContext gerencia o estado de autenticação globalmente
 
 ## Contato WhatsApp
 

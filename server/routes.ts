@@ -355,6 +355,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/reviews/all', async (_req, res) => {
+    try {
+      const reviews = await storage.getAllReviews();
+      res.json(reviews);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      res.status(500).json({ message: "Failed to fetch reviews" });
+    }
+  });
+
   app.get('/api/reviews', isAdmin, async (_req, res) => {
     try {
       const reviews = await storage.getAllReviews();
@@ -362,6 +372,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching reviews:", error);
       res.status(500).json({ message: "Failed to fetch reviews" });
+    }
+  });
+
+  app.get('/api/gallery/all', async (_req, res) => {
+    try {
+      const images = await storage.getAllGalleryImages();
+      res.json(images);
+    } catch (error) {
+      console.error("Error fetching gallery:", error);
+      res.status(500).json({ message: "Failed to fetch gallery" });
     }
   });
 

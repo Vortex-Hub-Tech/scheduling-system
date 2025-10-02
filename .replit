@@ -10,10 +10,6 @@ localPort = 3000
 externalPort = 3000
 
 [[ports]]
-localPort = 5000
-externalPort = 80
-
-[[ports]]
 localPort = 8081
 externalPort = 8081
 
@@ -74,23 +70,11 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Backend API"
+args = "Expo App"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Expo App"
-
-[[workflows.workflow]]
-name = "Backend API"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev:server"
-waitForPort = 3000
-
-[workflows.workflow.metadata]
-outputType = "console"
+args = "Backend"
 
 [[workflows.workflow]]
 name = "Expo App"
@@ -103,11 +87,23 @@ outputType = "console"
 task = "shell.exec"
 args = "npx expo start"
 
+[[workflows.workflow]]
+name = "Backend"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev:server"
+waitForPort = 3000
+
+[workflows.workflow.metadata]
+outputType = "console"
+
 [agent]
 expertMode = true
 integrations = ["javascript_database:1.0.0", "javascript_log_in_with_replit:1.0.0", "javascript_stripe:1.0.0"]
 
 [deployment]
 deploymentTarget = "vm"
-run = ["bash", "-c", "npm run dev:server & npm run dev:client"]
+run = ["npm", "run", "dev:server"]
 build = ["npm", "run", "build"]

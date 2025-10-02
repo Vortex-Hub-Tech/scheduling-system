@@ -2,6 +2,9 @@
 
 # dependencies
 node_modules/
+.npm
+.pnpm-store/
+package-lock.json
 
 # Expo
 .expo/
@@ -25,15 +28,47 @@ expo-env.d.ts
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+lerna-debug.log*
 
 # macOS
 .DS_Store
 *.pem
 
-# local env files
+# env files
+.env
 .env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # typescript
 *.tsbuildinfo
+*.tsbuildinfo.json
 
+# logs
+logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# misc
+.cache/
+.parcel-cache/
 app-example
+
+# build
+build/
+out/
+
+# Replit
+.replit
+.cache
+.config
+.upm
+.breakpoints
