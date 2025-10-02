@@ -46,11 +46,23 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  const [loaded] = useFonts({
+  const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  if (!loaded) {
+  // Aguardar carregamento das fontes e um tick extra
+  const [isReady, setIsReady] = React.useState(false);
+
+  React.useEffect(() => {
+    if (loaded || error) {
+      const timer = setTimeout(() => {
+        setIsReady(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [loaded, error]);
+
+  if (!isReady) {
     return null;
   }
 

@@ -22,10 +22,22 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    checkAuth();
+    // Aguardar um tick para garantir que o app está pronto
+    const timer = setTimeout(() => {
+      setIsReady(true);
+    }, 0);
+    
+    return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (isReady) {
+      checkAuth();
+    }
+  }, [isReady]);
 
   const checkAuth = async () => {
     try {
