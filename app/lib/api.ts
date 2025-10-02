@@ -1,6 +1,15 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
+
+const storage = {
+  getItem: async (key: string) => {
+    if (Platform.OS === 'web') {
+      return localStorage.getItem(key);
+    }
+    return await SecureStore.getItemAsync(key);
+  }
+};
 
 const getApiUrl = () => {
   if (__DEV__) {
@@ -34,7 +43,7 @@ export async function apiRequest(
     'Content-Type': 'application/json',
   };
 
-  const token = await AsyncStorage.getItem('authToken');
+  const token = await storage.getItem('authToken');
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }

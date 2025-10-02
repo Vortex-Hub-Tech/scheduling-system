@@ -1,6 +1,31 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import { apiRequest } from '../lib/api';
+
+// Fallback storage para web
+const storage = {
+  getItem: async (key: string) => {
+    if (Platform.OS === 'web') {
+      return localStorage.getItem(key);
+    }
+    return await SecureStore.getItemAsync(key);
+  },
+  setItem: async (key: string, value: string) => {
+    if (Platform.OS === 'web') {
+      localStorage.setItem(key, value);
+      return;
+    }
+    await SecureStore.setItemAsync(key, value);
+  },
+  removeItem: async (key: string) => {
+    if (Platform.OS === 'web') {
+      localStorage.removeItem(key);
+      return;
+    }
+    await SecureStore.deleteItemAsync(key);
+  }
+};
 
 interface User {
   id: number;
@@ -41,14 +66,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const token = await AsyncStorage.getItem('authToken');
+      const token = await storage.getItem('authToken');
       if (token) {
         const res = await apiRequest('GET', '/api/auth/me');
         if (res.ok) {
           const userData = await res.json();
           setUser(userData);
         } else {
-          await AsyncStorage.removeItem('authToken');
+          await storage.removeItem('authToken');
         }
       }
     } catch (error) {
@@ -62,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const res = await apiRequest('POST', '/api/auth/login', { email, password });
     if (res.ok) {
       const data = await res.json();
-      await AsyncStorage.setItem('authToken', data.token);
+      await storage.setItem('authToken', data.token);
       setUser(data.user);
     } else {
       const error = await res.json();
@@ -74,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const res = await apiRequest('POST', '/api/auth/register', { name, email, password, phone });
     if (res.ok) {
       const data = await res.json();
-      await AsyncStorage.setItem('authToken', data.token);
+      await storage.setItem('authToken', data.token);
       setUser(data.user);
     } else {
       const error = await res.json();
@@ -83,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem('authToken');
+    await storage.removeItem('authToken');
     setUser(null);
   };
 
