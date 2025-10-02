@@ -1,12 +1,20 @@
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
 const getApiUrl = () => {
   if (__DEV__) {
-    const { manifest } = Constants;
-    if (manifest?.debuggerHost) {
-      const ip = manifest.debuggerHost.split(':').shift();
+    if (Platform.OS === 'web') {
+      return 'http://localhost:3000';
+    }
+    
+    const manifest = Constants.expoConfig;
+    const debuggerHost = manifest?.hostUri;
+    
+    if (debuggerHost) {
+      const ip = debuggerHost.split(':').shift();
       return `http://${ip}:3000`;
     }
+    
     return 'http://localhost:3000';
   }
   return process.env.EXPO_PUBLIC_API_URL || 'https://your-production-api.repl.co';

@@ -1,8 +1,10 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { user, logout } = useAuth();
 
   const handleWhatsApp = () => {
     const phone = '5547996885117';
@@ -10,13 +12,21 @@ export default function HomeScreen() {
     Linking.openURL(`whatsapp://send?phone=${phone}&text=${message}`);
   };
 
+  const handleLogout = async () => {
+    await logout();
+    router.replace('/login');
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Bem-vindo ao Sistema de Agendamentos</Text>
+        <Text style={styles.title}>Bem-vindo{user?.firstName ? `, ${user.firstName}` : ''}!</Text>
         <Text style={styles.subtitle}>
           Escolha entre nossos serviços profissionais e agende com facilidade
         </Text>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutText}>🚪 Sair</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.cardsContainer}>
@@ -81,7 +91,6 @@ const styles = StyleSheet.create({
   header: {
     padding: 24,
     backgroundColor: '#2563eb',
-    alignItems: 'center',
   },
   title: {
     fontSize: 24,
@@ -94,6 +103,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#e0e7ff',
     textAlign: 'center',
+  },
+  logoutButton: {
+    alignSelf: 'center',
+    marginTop: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  logoutText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   cardsContainer: {
     padding: 16,

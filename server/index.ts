@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes.js";
+import { registerAuthRoutes } from "./authRoutes.js";
 import cors from "cors";
 
 // Bypass SSL certificate verification in development
@@ -22,6 +23,8 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   const message = err.message || "Internal Server Error";
   res.status(status).json({ message });
 });
+
+registerAuthRoutes(app);
 
 registerRoutes(app).then((server) => {
   const PORT = process.env.PORT || 3000;

@@ -24,7 +24,8 @@ export const sessions = pgTable(
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique(),
+  email: varchar("email").unique().notNull(),
+  password: varchar("password").notNull(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
@@ -62,6 +63,7 @@ export const services = pgTable("services", {
 
 export const bookings = pgTable("bookings", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
   customerName: varchar("customer_name", { length: 255 }),
   customerPhone: varchar("customer_phone", { length: 20 }).notNull(),
   customerEmail: varchar("customer_email", { length: 255 }),
@@ -149,6 +151,10 @@ export const servicesRelations = relations(services, ({ one, many }) => ({
 }));
 
 export const bookingsRelations = relations(bookings, ({ one }) => ({
+  user: one(users, {
+    fields: [bookings.userId],
+    references: [users.id],
+  }),
   service: one(services, {
     fields: [bookings.serviceId],
     references: [services.id],
