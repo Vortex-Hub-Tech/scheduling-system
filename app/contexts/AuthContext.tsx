@@ -2,30 +2,45 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Platform } from 'react-native';
 import { apiRequest } from '../lib/api';
 
-// Fallback storage para web
+// Fallback storage para web e ambiente sem SecureStore
 const storage = {
   getItem: async (key: string) => {
     if (Platform.OS === 'web') {
       return localStorage.getItem(key);
     }
-    const SecureStore = require('expo-secure-store');
-    return await SecureStore.getItemAsync(key);
+    try {
+      const SecureStore = require('expo-secure-store');
+      return await SecureStore.getItemAsync(key);
+    } catch (error) {
+      console.warn('SecureStore not available, using fallback storage');
+      return localStorage.getItem(key);
+    }
   },
   setItem: async (key: string, value: string) => {
     if (Platform.OS === 'web') {
       localStorage.setItem(key, value);
       return;
     }
-    const SecureStore = require('expo-secure-store');
-    await SecureStore.setItemAsync(key, value);
+    try {
+      const SecureStore = require('expo-secure-store');
+      await SecureStore.setItemAsync(key, value);
+    } catch (error) {
+      console.warn('SecureStore not available, using fallback storage');
+      localStorage.setItem(key, value);
+    }
   },
   removeItem: async (key: string) => {
     if (Platform.OS === 'web') {
       localStorage.removeItem(key);
       return;
     }
-    const SecureStore = require('expo-secure-store');
-    await SecureStore.deleteItemAsync(key);
+    try {
+      const SecureStore = require('expo-secure-store');
+      await SecureStore.deleteItemAsync(key);
+    } catch (error) {
+      console.warn('SecureStore not available, using fallback storage');
+      localStorage.removeItem(key);
+    }
   }
 };
 
