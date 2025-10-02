@@ -1,0 +1,35 @@
+C:\Projects\scheduling-system\node_modules\react-native-web\dist\modules\warnOnce\index.js:24  "shadow*" style props are deprecated. Use "boxShadow".
+warnOnce @ C:\Projects\scheduling-system\node_modules\react-native-web\dist\modules\warnOnce\index.js:24
+C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311  Route "./components/Collapsible.tsx" is missing the required default export. Ensure a React component is exported as default.
+getDirectoryTree @ C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311
+C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311  Route "./components/ExternalLink.tsx" is missing the required default export. Ensure a React component is exported as default.
+getDirectoryTree @ C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311
+C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311  Route "./components/HapticTab.tsx" is missing the required default export. Ensure a React component is exported as default.
+getDirectoryTree @ C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311
+C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311  Route "./components/HelloWave.tsx" is missing the required default export. Ensure a React component is exported as default.
+getDirectoryTree @ C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311
+C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311  Route "./components/ThemedText.tsx" is missing the required default export. Ensure a React component is exported as default.
+getDirectoryTree @ C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311
+C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311  Route "./components/ThemedView.tsx" is missing the required default export. Ensure a React component is exported as default.
+getDirectoryTree @ C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311
+C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311  Route "./components/ui/IconSymbol.tsx" is missing the required default export. Ensure a React component is exported as default.
+getDirectoryTree @ C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311
+C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311  Route "./components/ui/TabBarBackground.tsx" is missing the required default export. Ensure a React component is exported as default.
+getDirectoryTree @ C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311
+C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311  Route "./constants/Colors.ts" is missing the required default export. Ensure a React component is exported as default.
+getDirectoryTree @ C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311
+C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311  Route "./contexts/AuthContext.tsx" is missing the required default export. Ensure a React component is exported as default.
+getDirectoryTree @ C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311
+C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311  Route "./hooks/useColorScheme.ts" is missing the required default export. Ensure a React component is exported as default.
+getDirectoryTree @ C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311
+C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311  Route "./hooks/useColorScheme.web.ts" is missing the required default export. Ensure a React component is exported as default.
+getDirectoryTree @ C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311
+C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311  Route "./hooks/useThemeColor.ts" is missing the required default export. Ensure a React component is exported as default.
+getDirectoryTree @ C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311
+C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311  Route "./lib/api.ts" is missing the required default export. Ensure a React component is exported as default.
+getDirectoryTree @ C:\Projects\scheduling-system\node_modules\expo-router\build\getRoutesCore.js:311
+C:\Projects\scheduling-system\node_modules\react-native-web\dist\modules\warnOnce\index.js:24  props.pointerEvents is deprecated. Use style.pointerEvents
+warnOnce @ C:\Projects\scheduling-system\node_modules\react-native-web\dist\modules\warnOnce\index.js:24
+C:\Projects\scheduling-system\node_modules\react-native-web\dist\modules\useResponderEvents\ResponderTouchHistoryStore.js:104  Cannot record touch end without a touch start.
+ Touch End: {"identifier":0,"pageX":257,"pageY":493,"timestamp":42223}
+ Touch Bank: []
