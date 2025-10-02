@@ -1,45 +1,42 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 import { apiRequest } from '../lib/api';
 
-// Fallback storage para web e ambiente sem SecureStore
+// Storage adapter para diferentes plataformas
 const storage = {
   getItem: async (key: string) => {
-    if (Platform.OS === 'web') {
-      return localStorage.getItem(key);
-    }
     try {
-      const SecureStore = require('expo-secure-store');
+      if (Platform.OS === 'web') {
+        return localStorage.getItem(key);
+      }
       return await SecureStore.getItemAsync(key);
     } catch (error) {
-      console.warn('SecureStore not available, using fallback storage');
-      return localStorage.getItem(key);
+      console.warn('Storage getItem error:', error);
+      return null;
     }
   },
   setItem: async (key: string, value: string) => {
-    if (Platform.OS === 'web') {
-      localStorage.setItem(key, value);
-      return;
-    }
     try {
-      const SecureStore = require('expo-secure-store');
+      if (Platform.OS === 'web') {
+        localStorage.setItem(key, value);
+        return;
+      }
       await SecureStore.setItemAsync(key, value);
     } catch (error) {
-      console.warn('SecureStore not available, using fallback storage');
-      localStorage.setItem(key, value);
+      console.warn('Storage setItem error:', error);
     }
   },
   removeItem: async (key: string) => {
-    if (Platform.OS === 'web') {
-      localStorage.removeItem(key);
-      return;
-    }
     try {
-      const SecureStore = require('expo-secure-store');
+      if (Platform.OS === 'web') {
+        localStorage.removeItem(key);
+        return;
+      }
       await SecureStore.deleteItemAsync(key);
     } catch (error) {
-      console.warn('SecureStore not available, using fallback storage');
-      localStorage.removeItem(key);
+      console.warn('Storage removeItem error:', error);
     }
   }
 };
@@ -67,7 +64,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Aguardar um tick para garantir que o app está pronto
     const timer = setTimeout(() => {
       setIsReady(true);
     }, 0);

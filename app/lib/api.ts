@@ -1,13 +1,19 @@
+
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 
 const storage = {
   getItem: async (key: string) => {
-    if (Platform.OS === 'web') {
-      return localStorage.getItem(key);
+    try {
+      if (Platform.OS === 'web') {
+        return localStorage.getItem(key);
+      }
+      return await SecureStore.getItemAsync(key);
+    } catch (error) {
+      console.warn('Storage error:', error);
+      return null;
     }
-    const SecureStore = require('expo-secure-store');
-    return await SecureStore.getItemAsync(key);
   }
 };
 

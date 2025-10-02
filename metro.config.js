@@ -3,7 +3,14 @@ const path = require('path');
 
 const config = getDefaultConfig(__dirname);
 
-config.resolver.blacklistRE = /(server|client)\/.*|index\.html|vite\.config\.ts|drizzle\.config\.ts|InternalBytecode\.js/;
+config.resolver.blacklistRE = /(server|client)\/.*|index\.html|vite\.config\.ts|drizzle\.config\.ts/;
+config.resolver.blockList = [
+  /InternalBytecode\.js$/,
+  /(server|client)\/.*/,
+  /index\.html$/,
+  /vite\.config\.ts$/,
+  /drizzle\.config\.ts$/
+];
 
 config.resolver.sourceExts = [...config.resolver.sourceExts, 'cjs'];
 
