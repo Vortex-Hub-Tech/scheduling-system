@@ -7,6 +7,9 @@ import {
   galleryImages,
   availableSlots,
   businessHours,
+  serviceCategories,
+  businessSettings,
+  dateOverrides,
   type User,
   type UpsertUser,
   type Professional,
@@ -23,9 +26,16 @@ import {
   type InsertAvailableSlot,
   type BusinessHours,
   type InsertBusinessHours,
+  type ServiceCategory,
+  type InsertServiceCategory,
+  type BusinessSettings,
+  type InsertBusinessSettings,
+  type DateOverride,
+  type InsertDateOverride,
+  type BookingWithRelations,
 } from "../shared/schema.js";
 import { db } from "./db.js";
-import { eq, desc, and, gte, sql } from "drizzle-orm";
+import { eq, desc, and, gte, lte, sql, count, sum } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -48,9 +58,9 @@ export interface IStorage {
 
   createBooking(data: InsertBooking): Promise<Booking>;
   getBooking(id: number): Promise<Booking | undefined>;
-  getBookingsByUser(userId: string): Promise<Booking[]>;
-  getBookingsByEmail(email: string): Promise<Booking[]>;
-  getBookingsByPhone(phone: string): Promise<Booking[]>;
+  getBookingsByUser(userId: string): Promise<BookingWithRelations[]>;
+  getBookingsByEmail(email: string): Promise<BookingWithRelations[]>;
+  getBookingsByPhone(phone: string): Promise<BookingWithRelations[]>;
   getBookingsByProfessional(professionalId: number): Promise<Booking[]>;
   getAllBookings(): Promise<Booking[]>;
   updateBooking(id: number, data: Partial<InsertBooking>): Promise<Booking>;
@@ -71,10 +81,24 @@ export interface IStorage {
   generateVerificationCode(phone: string): Promise<string>;
   verifyPhoneCode(phone: string, code: string): Promise<boolean>;
 
-  // Business Hours methods
   getBusinessHours(professionalId: number): Promise<BusinessHours[]>;
   createOrUpdateBusinessHours(professionalId: number, hours: Omit<InsertBusinessHours, 'professionalId'>[]): Promise<void>;
   generateSlotsFromBusinessHours(professionalId: number, serviceId: number, date: Date): Promise<AvailableSlot[]>;
+
+  getAllCategories(): Promise<ServiceCategory[]>;
+  getCategory(id: number): Promise<ServiceCategory | undefined>;
+  createCategory(data: InsertServiceCategory): Promise<ServiceCategory>;
+  updateCategory(id: number, data: Partial<InsertServiceCategory>): Promise<ServiceCategory>;
+  deleteCategory(id: number): Promise<void>;
+
+  getBusinessSettings(): Promise<BusinessSettings | undefined>;
+  updateBusinessSettings(data: Partial<InsertBusinessSettings>): Promise<BusinessSettings>;
+
+  getDateOverrides(professionalId: number): Promise<DateOverride[]>;
+  createDateOverride(data: InsertDateOverride): Promise<DateOverride>;
+  deleteDateOverride(id: number): Promise<void>;
+
+  getOwnerStats(professionalId: number): Promise<{ todayBookings: number, pendingBookings: number, confirmedBookings: number, monthRevenue: number }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -184,7 +208,7 @@ export class DatabaseStorage implements IStorage {
     return booking;
   }
 
-  async getBookingsByUser(userId: string): Promise<Booking[]> {
+  async getBookingsByUser(userId: string): Promise<BookingWithRelations[]> {
     return await db
       .select({
         id: bookings.id,
@@ -199,6 +223,12 @@ export class DatabaseStorage implements IStorage {
         notes: bookings.notes,
         createdAt: bookings.createdAt,
         updatedAt: bookings.updatedAt,
+        customerName: bookings.customerName,
+        customerPhone: bookings.customerPhone,
+        customerEmail: bookings.customerEmail,
+        phoneVerified: bookings.phoneVerified,
+        verificationCode: bookings.verificationCode,
+        codeExpiresAt: bookings.codeExpiresAt,
         serviceName: services.name,
         professionalName: professionals.name,
       })
@@ -206,13 +236,14 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(services, eq(bookings.serviceId, services.id))
       .leftJoin(professionals, eq(bookings.professionalId, professionals.id))
       .where(eq(bookings.userId, userId))
-      .orderBy(desc(bookings.createdAt));
+      .orderBy(desc(bookings.createdAt)) as any;
   }
 
-  async getBookingsByEmail(email: string): Promise<Booking[]> {
+  async getBookingsByEmail(email: string): Promise<BookingWithRelations[]> {
     return await db
       .select({
         id: bookings.id,
+        userId: bookings.userId,
         customerName: bookings.customerName,
         customerEmail: bookings.customerEmail,
         customerPhone: bookings.customerPhone,
@@ -225,6 +256,8 @@ export class DatabaseStorage implements IStorage {
         paymentIntentId: bookings.paymentIntentId,
         notes: bookings.notes,
         phoneVerified: bookings.phoneVerified,
+        verificationCode: bookings.verificationCode,
+        codeExpiresAt: bookings.codeExpiresAt,
         createdAt: bookings.createdAt,
         updatedAt: bookings.updatedAt,
         serviceName: services.name,
@@ -234,13 +267,14 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(services, eq(bookings.serviceId, services.id))
       .leftJoin(professionals, eq(bookings.professionalId, professionals.id))
       .where(eq(bookings.customerEmail, email))
-      .orderBy(desc(bookings.createdAt));
+      .orderBy(desc(bookings.createdAt)) as any;
   }
 
-  async getBookingsByPhone(phone: string): Promise<Booking[]> {
+  async getBookingsByPhone(phone: string): Promise<BookingWithRelations[]> {
     return await db
       .select({
         id: bookings.id,
+        userId: bookings.userId,
         customerName: bookings.customerName,
         customerEmail: bookings.customerEmail,
         customerPhone: bookings.customerPhone,
@@ -253,6 +287,8 @@ export class DatabaseStorage implements IStorage {
         paymentIntentId: bookings.paymentIntentId,
         notes: bookings.notes,
         phoneVerified: bookings.phoneVerified,
+        verificationCode: bookings.verificationCode,
+        codeExpiresAt: bookings.codeExpiresAt,
         createdAt: bookings.createdAt,
         updatedAt: bookings.updatedAt,
         serviceName: services.name,
@@ -262,7 +298,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(services, eq(bookings.serviceId, services.id))
       .leftJoin(professionals, eq(bookings.professionalId, professionals.id))
       .where(eq(bookings.customerPhone, phone))
-      .orderBy(desc(bookings.createdAt));
+      .orderBy(desc(bookings.createdAt)) as any;
   }
 
   async getBookingsByProfessional(professionalId: number): Promise<Booking[]> {
@@ -325,35 +361,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAvailableSlots(professionalId: number, serviceId: number, date?: Date): Promise<AvailableSlot[]> {
-    let query = db
-      .select()
-      .from(availableSlots)
-      .where(
-        and(
-          eq(availableSlots.professionalId, professionalId),
-          eq(availableSlots.serviceId, serviceId),
-          eq(availableSlots.isBooked, false)
-        )
-      );
+    const conditions = [
+      eq(availableSlots.professionalId, professionalId),
+      eq(availableSlots.serviceId, serviceId),
+      eq(availableSlots.isBooked, false)
+    ];
 
     if (date) {
       const startOfDay = new Date(date);
       startOfDay.setHours(0, 0, 0, 0);
       const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
-
-      query = query.where(
-        and(
-          eq(availableSlots.professionalId, professionalId),
-          eq(availableSlots.serviceId, serviceId),
-          eq(availableSlots.isBooked, false),
-          gte(availableSlots.slotDate, startOfDay),
-          sql`${availableSlots.slotDate} <= ${endOfDay}`
-        )
-      );
+      
+      conditions.push(gte(availableSlots.slotDate, startOfDay));
+      conditions.push(sql`${availableSlots.slotDate} <= ${endOfDay}` as any);
     }
 
-    return await query.orderBy(availableSlots.slotDate);
+    return await db
+      .select()
+      .from(availableSlots)
+      .where(and(...conditions))
+      .orderBy(availableSlots.slotDate);
   }
 
   async createAvailableSlot(data: InsertAvailableSlot): Promise<AvailableSlot> {
@@ -494,6 +522,132 @@ export class DatabaseStorage implements IStorage {
     }
 
     return [];
+  }
+
+  async getAllCategories(): Promise<ServiceCategory[]> {
+    return await db
+      .select()
+      .from(serviceCategories)
+      .where(eq(serviceCategories.isActive, true))
+      .orderBy(serviceCategories.displayOrder, serviceCategories.name);
+  }
+
+  async getCategory(id: number): Promise<ServiceCategory | undefined> {
+    const [category] = await db.select().from(serviceCategories).where(eq(serviceCategories.id, id));
+    return category;
+  }
+
+  async createCategory(data: InsertServiceCategory): Promise<ServiceCategory> {
+    const [category] = await db.insert(serviceCategories).values(data).returning();
+    return category;
+  }
+
+  async updateCategory(id: number, data: Partial<InsertServiceCategory>): Promise<ServiceCategory> {
+    const [category] = await db
+      .update(serviceCategories)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(serviceCategories.id, id))
+      .returning();
+    return category;
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    await db.delete(serviceCategories).where(eq(serviceCategories.id, id));
+  }
+
+  async getBusinessSettings(): Promise<BusinessSettings | undefined> {
+    const [settings] = await db.select().from(businessSettings).where(eq(businessSettings.id, 1));
+    return settings;
+  }
+
+  async updateBusinessSettings(data: Partial<InsertBusinessSettings>): Promise<BusinessSettings> {
+    const [settings] = await db
+      .insert(businessSettings)
+      .values({ id: 1, ...data } as InsertBusinessSettings)
+      .onConflictDoUpdate({
+        target: businessSettings.id,
+        set: {
+          ...data,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return settings;
+  }
+
+  async getDateOverrides(professionalId: number): Promise<DateOverride[]> {
+    return await db
+      .select()
+      .from(dateOverrides)
+      .where(eq(dateOverrides.professionalId, professionalId))
+      .orderBy(dateOverrides.date);
+  }
+
+  async createDateOverride(data: InsertDateOverride): Promise<DateOverride> {
+    const [override] = await db.insert(dateOverrides).values(data).returning();
+    return override;
+  }
+
+  async deleteDateOverride(id: number): Promise<void> {
+    await db.delete(dateOverrides).where(eq(dateOverrides.id, id));
+  }
+
+  async getOwnerStats(professionalId: number): Promise<{ todayBookings: number, pendingBookings: number, confirmedBookings: number, monthRevenue: number }> {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const [todayBookingsResult] = await db
+      .select({ count: count() })
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.professionalId, professionalId),
+          gte(bookings.bookingDate, startOfToday),
+          lte(bookings.bookingDate, endOfToday)
+        )
+      );
+
+    const [pendingBookingsResult] = await db
+      .select({ count: count() })
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.professionalId, professionalId),
+          eq(bookings.status, 'pending')
+        )
+      );
+
+    const [confirmedBookingsResult] = await db
+      .select({ count: count() })
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.professionalId, professionalId),
+          eq(bookings.status, 'confirmed')
+        )
+      );
+
+    const [monthRevenueResult] = await db
+      .select({ total: sum(bookings.totalAmount) })
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.professionalId, professionalId),
+          eq(bookings.paymentStatus, 'paid'),
+          gte(bookings.bookingDate, startOfMonth),
+          lte(bookings.bookingDate, endOfMonth)
+        )
+      );
+
+    return {
+      todayBookings: todayBookingsResult?.count || 0,
+      pendingBookings: pendingBookingsResult?.count || 0,
+      confirmedBookings: confirmedBookingsResult?.count || 0,
+      monthRevenue: parseFloat(monthRevenueResult?.total as string || '0'),
+    };
   }
 }
 

@@ -317,3 +317,8 @@ export type DateOverride = typeof dateOverrides.$inferSelect;
 export type InsertDateOverride = typeof dateOverrides.$inferInsert;
 export type NotificationQueue = typeof notificationQueue.$inferSelect;
 export type InsertNotificationQueue = typeof notificationQueue.$inferInsert;
+
+export type BookingWithRelations = Booking & {
+  serviceName?: string | null;
+  professionalName?: string | null;
+};
