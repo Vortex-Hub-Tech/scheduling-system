@@ -30,8 +30,10 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 registerAuthRoutes(app);
 
 registerRoutes(app).then((server) => {
-  const PORT = process.env.PORT || 3000;
-  server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  const PORT = Number(process.env.PORT) || 3000;
+
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
 });
+
