@@ -1,7 +1,7 @@
-# Sistema de Agendamento de Serviços Profissionais
+# Sistema de Agendamento de Serviços para Pequenas Empresas
 
 ## Visão Geral
-Sistema completo de agendamento de serviços profissionais com pagamento integrado via Stripe, gerenciamento administrativo completo e interface moderna e profissional.
+Sistema simples e eficiente de agendamento de serviços, ideal para pequenas empresas. Os clientes navegam e agendam sem necessidade de cadastro, enquanto o proprietário gerencia todo o sistema com acesso seguro.
 
 ## Arquitetura do Projeto
 
@@ -9,8 +9,8 @@ Sistema completo de agendamento de serviços profissionais com pagamento integra
 - **Porta**: 3000
 - **Framework**: Express.js com TypeScript
 - **Banco de Dados**: PostgreSQL (Neon) via Drizzle ORM
-- **Autenticação**: Replit Auth (OpenID Connect) com sessões em banco
-- **Pagamentos**: Stripe para processamento seguro
+- **Autenticação**: Sistema simples de proprietário com username/password (variáveis de ambiente)
+- **Acesso Público**: Clientes não precisam fazer login para navegar e agendar
 - **Localização**: API em português brasileiro
 
 ### Mobile App (React Native + Expo)
@@ -48,21 +48,23 @@ Sistema completo de agendamento de serviços profissionais com pagamento integra
 
 ## Funcionalidades Implementadas
 
-### Para Usuários (App Mobile)
-- ✅ Sistema de login/cadastro com email e senha (autenticação JWT)
+### Para Clientes (App Mobile)
+- ✅ Acesso livre sem necessidade de login ou cadastro
 - ✅ Tela inicial com navegação por cards
 - ✅ Listagem de serviços disponíveis
 - ✅ Visualização de detalhes de cada serviço
 - ✅ Agendamento de serviços com seleção de data/hora
-- ✅ Formulário de agendamento com dados do cliente
-- ✅ Visualização de agendamentos pessoais
+- ✅ Formulário de agendamento onde o cliente fornece seus dados (nome, telefone, email)
+- ✅ Visualização de agendamentos (se o cliente souber buscar)
 - ✅ Galeria de trabalhos dos profissionais
 - ✅ Sistema de avaliações com estrelas e comentários
 - ✅ Botão de contato via WhatsApp
 - ✅ Navegação fluida com Expo Router
 
-### Para Administradores
-- ✅ Painel administrativo completo (rota /admin)
+### Para Proprietários
+- ✅ Acesso via botão "🔐 Sou proprietário" na tela inicial
+- ✅ Login seguro com username e senha
+- ✅ Painel administrativo completo (rota /admin no cliente web)
 - ✅ CRUD de profissionais (criar, editar, excluir)
 - ✅ CRUD de serviços (criar, editar, excluir)
 - ✅ Gerenciamento de imagens da galeria
@@ -70,37 +72,38 @@ Sistema completo de agendamento de serviços profissionais com pagamento integra
 - ✅ Visualização de todas as avaliações
 - ✅ Dashboard com estatísticas
 
-## Configuração do Primeiro Admin
+## Configuração de Acesso do Proprietário
 
-Para tornar um usuário administrador:
-1. Faça login no sistema
-2. Obtenha seu ID de usuário do banco
-3. Execute no console do banco:
-```sql
-UPDATE users SET is_admin = true WHERE email = 'seu-email@exemplo.com';
-```
+As credenciais do proprietário são configuradas através de variáveis de ambiente:
+- **ADMIN_USERNAME**: Nome de usuário do proprietário (padrão: "admin")
+- **ADMIN_PASSWORD**: Senha do proprietário (padrão: "admin123")
+
+⚠️ **IMPORTANTE**: Altere a senha padrão em produção para uma senha forte!
 
 ## Fluxo de Uso (App Mobile)
 
-1. **Primeiro acesso**: Usuário vê tela de login
-2. **Criar conta**: Clica em "Cadastre-se" → Preenche email, senha, nome
-3. **Login**: Insere credenciais → Sistema autentica via JWT
-4. **Página inicial**: Vê cards de navegação (Serviços, Galeria, Avaliações, Meus Agendamentos)
-5. **Escolher serviço**: 
+### Para Clientes:
+1. **Primeiro acesso**: App abre direto na tela inicial - sem necessidade de login
+2. **Página inicial**: Vê cards de navegação (Serviços, Galeria, Avaliações, Meus Agendamentos)
+3. **Escolher serviço**: 
    - Vai para aba "Serviços"
    - Clica em um serviço para ver detalhes
    - Vê informações do profissional, preço, duração
-6. **Agendar**: 
+4. **Agendar**: 
    - Clica em "Agendar Agora"
    - Seleciona data e horário
-   - Preenche nome, telefone, email (opcional)
+   - Preenche seus dados: nome, telefone, email
    - Adiciona observações (opcional)
    - Confirma agendamento
-7. **Visualizar agendamentos**: Acessa "Meus Agendamentos" na tela inicial
-8. **Outros recursos**:
+5. **Outros recursos**:
    - Visualiza galeria de trabalhos
    - Lê avaliações de outros clientes
    - Contata via WhatsApp
+
+### Para Proprietários:
+1. **Acesso**: Na tela inicial, clica em "🔐 Sou proprietário"
+2. **Login**: Insere username e senha (configurados nas variáveis de ambiente)
+3. **Gerenciamento**: Acessa painel web administrativo em `/admin` para gerenciar todo o sistema
 
 ## Integração Stripe
 
@@ -176,11 +179,11 @@ O app mobile se conecta automaticamente ao backend Express na porta 3000. A conf
 - Em produção: Usa a variável EXPO_PUBLIC_API_URL
 
 ### Autenticação
-O app usa autenticação JWT (JSON Web Tokens):
-- Tokens são armazenados com segurança via Expo SecureStore
-- Login e registro com email/senha
-- Tokens válidos por 7 dias
-- AuthContext gerencia o estado de autenticação globalmente
+Sistema simplificado de identificação:
+- **Clientes**: Não precisam de cadastro ou login
+- **Proprietário**: Acesso protegido com username/senha via sessões seguras
+- **Sessões**: Gerenciadas pelo servidor com PostgreSQL
+- **AuthContext**: Gerencia apenas o estado de "proprietário" ou "cliente"
 
 ## Contato WhatsApp
 
