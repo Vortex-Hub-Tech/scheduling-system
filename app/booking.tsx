@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { apiRequest } from './lib/api';
-// DateTimePicker removed - using text input instead for web compatibility
 
 export default function BookingScreen() {
   const { serviceId, serviceName, servicePrice, serviceDuration, professionalId } = useLocalSearchParams();

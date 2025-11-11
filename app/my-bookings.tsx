@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, TextInput, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { apiRequest } from './lib/api';
-import { useAuth } from './contexts/AuthContext';
 
 interface Booking {
   id: number;
@@ -25,32 +24,40 @@ interface Booking {
 
 export default function MyBookingsScreen() {
   const router = useRouter();
-  const { user } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (user?.email) {
-      loadBookings();
-    }
-  }, [user]);
+  const [searchPhone, setSearchPhone] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
 
   const loadBookings = async () => {
-    if (!user?.email) return;
+    if (!searchPhone) {
+      Alert.alert('Atenção', 'Digite seu telefone para buscar seus agendamentos');
+      return;
+    }
+
+    const cleanPhone = searchPhone.replace(/\D/g, '');
+    if (cleanPhone.length < 10) {
+      Alert.alert('Erro', 'Telefone inválido. Digite um telefone válido.');
+      return;
+    }
     
+    setLoading(true);
+    setHasSearched(true);
     try {
       setError(null);
-      const res = await apiRequest('GET', `/api/bookings/user/${encodeURIComponent(user.email)}`);
+      const res = await apiRequest('GET', `/api/bookings/phone/${encodeURIComponent(cleanPhone)}`);
       if (res.ok) {
         const data = await res.json();
         setBookings(data);
       } else {
-        setError('Erro ao carregar agendamentos');
+        setError('Nenhum agendamento encontrado para este telefone');
+        setBookings([]);
       }
     } catch (err: any) {
       setError(err.message);
+      setBookings([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -88,14 +95,6 @@ export default function MyBookingsScreen() {
     }
   };
 
-  if (loading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#2563eb" />
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -111,16 +110,39 @@ export default function MyBookingsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563eb']} />
         }
       >
-        {error && (
+        <View style={styles.searchContainer}>
+          <Text style={styles.searchLabel}>Digite seu telefone para buscar seus agendamentos:</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Telefone (47999999999)"
+            value={searchPhone}
+            onChangeText={setSearchPhone}
+            keyboardType="phone-pad"
+            editable={!loading}
+          />
+          <TouchableOpacity
+            style={[styles.searchButton, loading && styles.searchButtonDisabled]}
+            onPress={loadBookings}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.searchButtonText}>Buscar Agendamentos</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {error && hasSearched && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>❌ {error}</Text>
           </View>
         )}
 
-        {bookings.length === 0 ? (
+        {hasSearched && bookings.length === 0 && !error ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📅</Text>
-            <Text style={styles.emptyText}>Você ainda não tem agendamentos</Text>
+            <Text style={styles.emptyText}>Nenhum agendamento encontrado</Text>
             <TouchableOpacity
               style={styles.exploreButton}
               onPress={() => router.push('/(tabs)/explore')}
@@ -128,7 +150,7 @@ export default function MyBookingsScreen() {
               <Text style={styles.exploreButtonText}>Ver Serviços</Text>
             </TouchableOpacity>
           </View>
-        ) : (
+        ) : hasSearched && bookings.length > 0 ? (
           <View style={styles.bookingsContainer}>
             {bookings.map((booking) => (
               <View key={booking.id} style={styles.bookingCard}>
