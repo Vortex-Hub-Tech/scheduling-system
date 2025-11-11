@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { isOwner, logout } = useAuth();
 
   const handleWhatsApp = () => {
     const phone = '5547996885117';
@@ -12,20 +12,25 @@ export default function HomeScreen() {
     Linking.openURL(`whatsapp://send?phone=${phone}&text=${message}`);
   };
 
-  const handleLogout = async () => {
-    await logout();
-    router.replace('/login');
+  const handleOwnerAccess = () => {
+    if (isOwner) {
+      logout();
+    } else {
+      router.push('/owner-login');
+    }
   };
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Bem-vindo{user?.firstName ? `, ${user.firstName}` : ''}!</Text>
+        <Text style={styles.title}>Bem-vindo!</Text>
         <Text style={styles.subtitle}>
           Escolha entre nossos serviços profissionais e agende com facilidade
         </Text>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>🚪 Sair</Text>
+        <TouchableOpacity style={styles.ownerButton} onPress={handleOwnerAccess}>
+          <Text style={styles.ownerText}>
+            {isOwner ? '🚪 Sair do modo proprietário' : '🔐 Sou proprietário'}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -104,7 +109,7 @@ const styles = StyleSheet.create({
     color: '#e0e7ff',
     textAlign: 'center',
   },
-  logoutButton: {
+  ownerButton: {
     alignSelf: 'center',
     marginTop: 16,
     backgroundColor: 'rgba(255,255,255,0.2)',
@@ -112,7 +117,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
   },
-  logoutText: {
+  ownerText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',

@@ -10,29 +10,12 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const { user, loading } = useAuth();
-  const segments = useSegments();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (loading) return;
-
-    const inAuthGroup = segments[0] === '(tabs)';
-    const inAuthScreen = segments[0] === 'login' || segments[0] === 'register';
-
-    if (!user && inAuthGroup) {
-      router.replace('/login');
-    } else if (user && (inAuthScreen || segments.length === 0)) {
-      router.replace('/(tabs)');
-    }
-  }, [user, loading, segments]);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="register" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="owner-login" options={{ headerShown: false }} />
         <Stack.Screen name="service-details" options={{ headerShown: false }} />
         <Stack.Screen name="booking" options={{ headerShown: false }} />
         <Stack.Screen name="my-bookings" options={{ headerShown: false }} />

@@ -4,7 +4,6 @@ import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { apiRequest } from '../lib/api';
 
-// Storage adapter para diferentes plataformas
 const storage = {
   getItem: async (key: string) => {
     try {
@@ -41,92 +40,62 @@ const storage = {
   }
 };
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-}
-
 interface AuthContextType {
-  user: User | null;
+  isOwner: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, phone: string) => Promise<void>;
+  loginAsOwner: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsReady(true);
-    }, 0);
-    
-    return () => clearTimeout(timer);
+    checkOwnerStatus();
   }, []);
 
-  useEffect(() => {
-    if (isReady) {
-      checkAuth();
-    }
-  }, [isReady]);
-
-  const checkAuth = async () => {
+  const checkOwnerStatus = async () => {
     try {
-      const token = await storage.getItem('authToken');
-      if (token) {
-        const res = await apiRequest('GET', '/api/auth/me');
+      const ownerToken = await storage.getItem('ownerToken');
+      if (ownerToken) {
+        const res = await apiRequest('GET', '/api/admin/status');
         if (res.ok) {
-          const userData = await res.json();
-          setUser(userData);
+          const data = await res.json();
+          setIsOwner(data.isAdmin);
         } else {
-          await storage.removeItem('authToken');
+          await storage.removeItem('ownerToken');
+          setIsOwner(false);
         }
       }
     } catch (error) {
-      console.error('Auth check error:', error);
+      console.error('Owner check error:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const login = async (email: string, password: string) => {
-    const res = await apiRequest('POST', '/api/auth/login', { email, password });
+  const loginAsOwner = async (username: string, password: string) => {
+    const res = await apiRequest('POST', '/api/admin/login', { username, password });
     if (res.ok) {
-      const data = await res.json();
-      await storage.setItem('authToken', data.token);
-      setUser(data.user);
+      await storage.setItem('ownerToken', 'true');
+      setIsOwner(true);
     } else {
       const error = await res.json();
-      throw new Error(error.message || 'Login failed');
-    }
-  };
-
-  const register = async (name: string, email: string, password: string, phone: string) => {
-    const res = await apiRequest('POST', '/api/auth/register', { name, email, password, phone });
-    if (res.ok) {
-      const data = await res.json();
-      await storage.setItem('authToken', data.token);
-      setUser(data.user);
-    } else {
-      const error = await res.json();
-      throw new Error(error.message || 'Registration failed');
+      throw new Error(error.message || 'Login falhou');
     }
   };
 
   const logout = async () => {
-    await storage.removeItem('authToken');
-    setUser(null);
+    const res = await apiRequest('POST', '/api/admin/logout');
+    await storage.removeItem('ownerToken');
+    setIsOwner(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ isOwner, loading, loginAsOwner, logout }}>
       {children}
     </AuthContext.Provider>
   );
