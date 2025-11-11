@@ -17,6 +17,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ isAdmin: isAdminUser });
   });
 
+  // Owner Stats Dashboard
+  app.get('/api/owner/stats/:professionalId', isAdmin, async (req, res) => {
+    try {
+      const professionalId = parseInt(req.params.professionalId);
+      const stats = await storage.getOwnerStats(professionalId);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching owner stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Categories routes
+  app.get('/api/categories', async (_req, res) => {
+    try {
+      const categories = await storage.getAllCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  app.post('/api/categories', isAdmin, async (req, res) => {
+    try {
+      const category = await storage.createCategory(req.body);
+      res.status(201).json(category);
+    } catch (error) {
+      console.error("Error creating category:", error);
+      res.status(500).json({ message: "Failed to create category" });
+    }
+  });
+
+  app.put('/api/categories/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const category = await storage.updateCategory(id, req.body);
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating category:", error);
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+
+  app.delete('/api/categories/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteCategory(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      res.status(500).json({ message: "Failed to delete category" });
+    }
+  });
+
+  // Business Settings routes
+  app.get('/api/settings', async (_req, res) => {
+    try {
+      const settings = await storage.getBusinessSettings();
+      res.json(settings || {});
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+      res.status(500).json({ message: "Failed to fetch settings" });
+    }
+  });
+
+  app.put('/api/settings', isAdmin, async (req, res) => {
+    try {
+      const settings = await storage.updateBusinessSettings(req.body);
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating settings:", error);
+      res.status(500).json({ message: "Failed to update settings" });
+    }
+  });
+
+  // Date Overrides routes
+  app.get('/api/date-overrides', async (req, res) => {
+    try {
+      const professionalId = parseInt(req.query.professionalId as string);
+      const overrides = await storage.getDateOverrides(professionalId);
+      res.json(overrides);
+    } catch (error) {
+      console.error("Error fetching date overrides:", error);
+      res.status(500).json({ message: "Failed to fetch date overrides" });
+    }
+  });
+
+  app.post('/api/date-overrides', isAdmin, async (req, res) => {
+    try {
+      const data = {
+        ...req.body,
+        date: new Date(req.body.date),
+      };
+      const override = await storage.createDateOverride(data);
+      res.status(201).json(override);
+    } catch (error) {
+      console.error("Error creating date override:", error);
+      res.status(500).json({ message: "Failed to create date override" });
+    }
+  });
+
+  app.delete('/api/date-overrides/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteDateOverride(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting date override:", error);
+      res.status(500).json({ message: "Failed to delete date override" });
+    }
+  });
+
   app.get('/api/professionals', async (_req, res) => {
     try {
       const professionals = await storage.getAllProfessionals();

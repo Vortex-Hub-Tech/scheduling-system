@@ -1,12 +1,56 @@
 
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppConfig } from '../contexts/AppConfigContext';
+import { apiRequest } from '../lib/api';
+
+interface OwnerStats {
+  todayBookings: number;
+  pendingBookings: number;
+  confirmedBookings: number;
+  monthRevenue: number;
+}
 
 export default function DashboardScreen() {
   const router = useRouter();
   const { isOwnerMode } = useAppConfig();
+  const [stats, setStats] = useState<OwnerStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const [error, setError] = useState<string | null>(null);
+
+  const loadStats = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await apiRequest('GET', '/api/owner/stats/1');
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data);
+      } else {
+        setError('Não foi possível carregar as estatísticas');
+      }
+    } catch (error) {
+      console.error('Error loading stats:', error);
+      setError('Erro ao conectar com o servidor');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOwnerMode) {
+      loadStats();
+    }
+  }, [isOwnerMode]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadStats();
+  };
 
   if (isOwnerMode) {
     return (
@@ -16,47 +60,85 @@ export default function DashboardScreen() {
           <Text style={styles.headerSubtitle}>Visão geral do seu negócio</Text>
         </View>
 
-        <ScrollView style={styles.content}>
-          <View style={styles.statsGrid}>
-            <View style={[styles.statCard, { backgroundColor: '#667eea' }]}>
-              <Text style={styles.statIcon}>📅</Text>
-              <Text style={styles.statValue}>--</Text>
-              <Text style={styles.statLabel}>Agendamentos Hoje</Text>
+        <ScrollView 
+          style={styles.content}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563eb" />
+          }
+        >
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#2563eb" />
+              <Text style={styles.loadingText}>Carregando estatísticas...</Text>
             </View>
-            <View style={[styles.statCard, { backgroundColor: '#f093fb' }]}>
-              <Text style={styles.statIcon}>⏳</Text>
-              <Text style={styles.statValue}>--</Text>
-              <Text style={styles.statLabel}>Pendentes</Text>
+          ) : error ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorIcon}>⚠️</Text>
+              <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity style={styles.retryButton} onPress={loadStats}>
+                <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+              </TouchableOpacity>
             </View>
-            <View style={[styles.statCard, { backgroundColor: '#4facfe' }]}>
-              <Text style={styles.statIcon}>✅</Text>
-              <Text style={styles.statValue}>--</Text>
-              <Text style={styles.statLabel}>Confirmados</Text>
-            </View>
-            <View style={[styles.statCard, { backgroundColor: '#43e97b' }]}>
-              <Text style={styles.statIcon}>💰</Text>
-              <Text style={styles.statValue}>R$ --</Text>
-              <Text style={styles.statLabel}>Receita do Mês</Text>
-            </View>
-          </View>
+          ) : (
+            <>
+              <View style={styles.statsGrid}>
+                <View style={[styles.statCard, { backgroundColor: '#667eea' }]}>
+                  <Text style={styles.statIcon}>📅</Text>
+                  <Text style={styles.statValue}>{stats?.todayBookings || 0}</Text>
+                  <Text style={styles.statLabel}>Agendamentos Hoje</Text>
+                </View>
+                <View style={[styles.statCard, { backgroundColor: '#f093fb' }]}>
+                  <Text style={styles.statIcon}>⏳</Text>
+                  <Text style={styles.statValue}>{stats?.pendingBookings || 0}</Text>
+                  <Text style={styles.statLabel}>Pendentes</Text>
+                </View>
+                <View style={[styles.statCard, { backgroundColor: '#4facfe' }]}>
+                  <Text style={styles.statIcon}>✅</Text>
+                  <Text style={styles.statValue}>{stats?.confirmedBookings || 0}</Text>
+                  <Text style={styles.statLabel}>Confirmados</Text>
+                </View>
+                <View style={[styles.statCard, { backgroundColor: '#43e97b' }]}>
+                  <Text style={styles.statIcon}>💰</Text>
+                  <Text style={styles.statValue}>
+                    R$ {stats?.monthRevenue ? Number(stats.monthRevenue).toFixed(2) : '0.00'}
+                  </Text>
+                  <Text style={styles.statLabel}>Receita do Mês</Text>
+                </View>
+              </View>
 
-          <View style={styles.quickActions}>
-            <Text style={styles.sectionTitle}>Ações Rápidas</Text>
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => router.push('/explore')}
-            >
-              <Text style={styles.actionIcon}>➕</Text>
-              <Text style={styles.actionText}>Novo Serviço</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => router.push('/my-bookings')}
-            >
-              <Text style={styles.actionIcon}>📋</Text>
-              <Text style={styles.actionText}>Ver Agendamentos</Text>
-            </TouchableOpacity>
-          </View>
+              <View style={styles.quickActions}>
+                <Text style={styles.sectionTitle}>Ações Rápidas</Text>
+                <TouchableOpacity 
+                  style={styles.actionButton}
+                  onPress={() => router.push('/categories')}
+                >
+                  <Text style={styles.actionIcon}>🎨</Text>
+                  <Text style={styles.actionText}>Categorias</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.actionButton}
+                  onPress={() => router.push('/explore')}
+                >
+                  <Text style={styles.actionIcon}>➕</Text>
+                  <Text style={styles.actionText}>Novo Serviço</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.actionButton}
+                  onPress={() => router.push('/my-bookings')}
+                >
+                  <Text style={styles.actionIcon}>📋</Text>
+                  <Text style={styles.actionText}>Ver Agendamentos</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.actionButton}
+                  onPress={() => router.push('/gallery')}
+                >
+                  <Text style={styles.actionIcon}>⚙️</Text>
+                  <Text style={styles.actionText}>Configurações</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
         </ScrollView>
       </View>
     );
@@ -131,6 +213,45 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#64748b',
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  errorIcon: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#dc2626',
+    textAlign: 'center',
+    marginBottom: 24,
+    paddingHorizontal: 32,
+  },
+  retryButton: {
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   statsGrid: {
     flexDirection: 'row',

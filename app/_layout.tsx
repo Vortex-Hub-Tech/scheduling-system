@@ -23,6 +23,7 @@ export default function RootLayout() {
         <Stack.Screen name="my-bookings" />
         <Stack.Screen name="gallery" />
         <Stack.Screen name="reviews" />
+        <Stack.Screen name="categories" />
       </Stack>
     </AppConfigProvider>
   );
