@@ -49,17 +49,34 @@ export const professionals = pgTable("professionals", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const services = pgTable("services", {
+export const serviceCategories = pgTable("service_categories", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  professionalId: integer("professional_id").notNull().references(() => professionals.id, { onDelete: 'cascade' }),
-  name: varchar("name", { length: 255 }).notNull(),
+  name: varchar("name", { length: 255 }).notNull().unique(),
   description: text("description"),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-  duration: integer("duration").notNull(),
+  icon: varchar("icon", { length: 50 }),
+  color: varchar("color", { length: 7 }),
+  displayOrder: integer("display_order").default(0),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export const services = pgTable("services", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  professionalId: integer("professional_id").notNull().references(() => professionals.id, { onDelete: 'cascade' }),
+  categoryId: integer("category_id").references(() => serviceCategories.id, { onDelete: 'set null' }),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  duration: integer("duration").notNull(),
+  imageUrl: text("image_url"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("services_professional_id_idx").on(table.professionalId),
+  index("services_category_id_idx").on(table.categoryId),
+]);
 
 export const bookings = pgTable("bookings", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -80,7 +97,12 @@ export const bookings = pgTable("bookings", {
   codeExpiresAt: timestamp("code_expires_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("bookings_professional_id_idx").on(table.professionalId),
+  index("bookings_booking_date_idx").on(table.bookingDate),
+  index("bookings_customer_phone_idx").on(table.customerPhone),
+  index("bookings_status_idx").on(table.status),
+]);
 
 export const reviews = pgTable("reviews", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -120,6 +142,56 @@ export const availableSlots = pgTable("available_slots", {
   slotDate: timestamp("slot_date").notNull(),
   isBooked: boolean("is_booked").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("available_slots_professional_service_idx").on(table.professionalId, table.serviceId),
+  index("available_slots_slot_date_idx").on(table.slotDate),
+]);
+
+export const businessSettings = pgTable("business_settings", {
+  id: integer("id").primaryKey().default(1),
+  businessName: varchar("business_name", { length: 255 }).notNull(),
+  description: text("description"),
+  logoUrl: text("logo_url"),
+  bannerUrl: text("banner_url"),
+  phone: varchar("phone", { length: 50 }),
+  email: varchar("email", { length: 255 }),
+  address: text("address"),
+  website: varchar("website", { length: 255 }),
+  primaryColor: varchar("primary_color", { length: 7 }).default('#2563eb'),
+  secondaryColor: varchar("secondary_color", { length: 7 }).default('#1e40af'),
+  whatsappNumber: varchar("whatsapp_number", { length: 50 }),
+  instagramHandle: varchar("instagram_handle", { length: 100 }),
+  facebookUrl: varchar("facebook_url", { length: 255 }),
+  bookingLeadTimeMinutes: integer("booking_lead_time_minutes").default(60),
+  cancellationLeadTimeHours: integer("cancellation_lead_time_hours").default(24),
+  maxAdvanceBookingDays: integer("max_advance_booking_days").default(60),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const dateOverrides = pgTable("date_overrides", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  professionalId: integer("professional_id").notNull().references(() => professionals.id, { onDelete: 'cascade' }),
+  date: timestamp("date").notNull(),
+  isClosed: boolean("is_closed").default(false).notNull(),
+  reason: text("reason"),
+  startTime: varchar("start_time", { length: 5 }),
+  endTime: varchar("end_time", { length: 5 }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  professionalDateIdx: index("date_overrides_professional_date_idx").on(table.professionalId, table.date),
+}));
+
+export const notificationQueue = pgTable("notification_queue", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  bookingId: integer("booking_id").references(() => bookings.id, { onDelete: 'cascade' }),
+  type: varchar("type", { length: 50 }).notNull(),
+  recipient: varchar("recipient", { length: 255 }).notNull(),
+  message: text("message").notNull(),
+  status: varchar("status", { length: 50 }).default('pending').notNull(),
+  sentAt: timestamp("sent_at"),
+  error: text("error"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -140,12 +212,21 @@ export const professionalsRelations = relations(professionals, ({ many }) => ({
   reviews: many(reviews),
   galleryImages: many(galleryImages),
   businessHours: many(businessHours),
+  dateOverrides: many(dateOverrides),
+}));
+
+export const serviceCategoriesRelations = relations(serviceCategories, ({ many }) => ({
+  services: many(services),
 }));
 
 export const servicesRelations = relations(services, ({ one, many }) => ({
   professional: one(professionals, {
     fields: [services.professionalId],
     references: [professionals.id],
+  }),
+  category: one(serviceCategories, {
+    fields: [services.categoryId],
+    references: [serviceCategories.id],
   }),
   bookings: many(bookings),
 }));
@@ -198,10 +279,26 @@ export const galleryImagesRelations = relations(galleryImages, ({ one }) => ({
   }),
 }));
 
+export const dateOverridesRelations = relations(dateOverrides, ({ one }) => ({
+  professional: one(professionals, {
+    fields: [dateOverrides.professionalId],
+    references: [professionals.id],
+  }),
+}));
+
+export const notificationQueueRelations = relations(notificationQueue, ({ one }) => ({
+  booking: one(bookings, {
+    fields: [notificationQueue.bookingId],
+    references: [bookings.id],
+  }),
+}));
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type Professional = typeof professionals.$inferSelect;
 export type InsertProfessional = typeof professionals.$inferInsert;
+export type ServiceCategory = typeof serviceCategories.$inferSelect;
+export type InsertServiceCategory = typeof serviceCategories.$inferInsert;
 export type Service = typeof services.$inferSelect;
 export type InsertService = typeof services.$inferInsert;
 export type Booking = typeof bookings.$inferSelect;
@@ -214,3 +311,9 @@ export type AvailableSlot = typeof availableSlots.$inferSelect;
 export type InsertAvailableSlot = typeof availableSlots.$inferInsert;
 export type BusinessHours = typeof businessHours.$inferSelect;
 export type InsertBusinessHours = typeof businessHours.$inferInsert;
+export type BusinessSettings = typeof businessSettings.$inferSelect;
+export type InsertBusinessSettings = typeof businessSettings.$inferInsert;
+export type DateOverride = typeof dateOverrides.$inferSelect;
+export type InsertDateOverride = typeof dateOverrides.$inferInsert;
+export type NotificationQueue = typeof notificationQueue.$inferSelect;
+export type InsertNotificationQueue = typeof notificationQueue.$inferInsert;
