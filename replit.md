@@ -161,8 +161,7 @@ app/
 │   └── AuthContext.tsx   # Gerenciamento de identificação proprietário/cliente
 ├── lib/
 │   └── api.ts            # Configuração de API requests
-├── login.tsx             # Tela de login
-├── register.tsx          # Tela de cadastro
+├── owner-login.tsx       # Tela de login do proprietário
 ├── service-details.tsx   # Detalhes do serviço
 ├── booking.tsx           # Formulário de agendamento
 ├── my-bookings.tsx       # Lista de agendamentos do usuário
