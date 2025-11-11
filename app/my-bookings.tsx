@@ -139,7 +139,7 @@ export default function MyBookingsScreen() {
           </View>
         )}
 
-        {hasSearched && bookings.length === 0 && !error ? (
+        {hasSearched && bookings.length === 0 && !error && (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📅</Text>
             <Text style={styles.emptyText}>Nenhum agendamento encontrado</Text>
@@ -150,7 +150,9 @@ export default function MyBookingsScreen() {
               <Text style={styles.exploreButtonText}>Ver Serviços</Text>
             </TouchableOpacity>
           </View>
-        ) : hasSearched && bookings.length > 0 ? (
+        )}
+
+        {hasSearched && bookings.length > 0 && (
           <View style={styles.bookingsContainer}>
             {bookings.map((booking) => (
               <View key={booking.id} style={styles.bookingCard}>
