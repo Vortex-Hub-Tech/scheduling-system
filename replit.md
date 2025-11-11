@@ -158,7 +158,7 @@ app/
 │   ├── explore.tsx       # Tela de serviços (lista serviços do backend)
 │   └── _layout.tsx       # Configuração das abas
 ├── contexts/
-│   └── AuthContext.tsx   # Gerenciamento de autenticação com JWT
+│   └── AuthContext.tsx   # Gerenciamento de identificação proprietário/cliente
 ├── lib/
 │   └── api.ts            # Configuração de API requests
 ├── login.tsx             # Tela de login
