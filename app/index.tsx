@@ -3,10 +3,14 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppConfig } from './contexts/AppConfigContext';
+import Constants from 'expo-constants';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isOwnerMode } = useAppConfig();
+  const { isOwnerMode, toggleMode } = useAppConfig();
+  
+  // Verifica se está em modo de desenvolvimento (Expo Go)
+  const isDevMode = !Constants.expoConfig?.extra?.APP_MODE;
 
   const clientCards = [
     {
@@ -83,14 +87,37 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>
-          {isOwnerMode ? '👨‍💼 Modo Proprietário' : '🎯 Bem-vindo!'}
-        </Text>
-        <Text style={styles.subtitle}>
-          {isOwnerMode 
-            ? 'Gerencie seu negócio' 
-            : 'Agende seus serviços com facilidade'}
-        </Text>
+        <View style={styles.headerTop}>
+          <View style={styles.headerTexts}>
+            <Text style={styles.title}>
+              {isOwnerMode ? '👨‍💼 Modo Proprietário' : '🎯 Bem-vindo!'}
+            </Text>
+            <Text style={styles.subtitle}>
+              {isOwnerMode 
+                ? 'Gerencie seu negócio' 
+                : 'Agende seus serviços com facilidade'}
+            </Text>
+          </View>
+          {isDevMode && (
+            <TouchableOpacity 
+              style={styles.toggleButton}
+              onPress={toggleMode}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.toggleIcon}>🔄</Text>
+              <Text style={styles.toggleText}>
+                {isOwnerMode ? 'Cliente' : 'Dono'}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        {isDevMode && (
+          <View style={styles.devBadge}>
+            <Text style={styles.devBadgeText}>
+              🛠️ Modo Desenvolvimento - Toque no botão acima para alternar
+            </Text>
+          </View>
+        )}
       </View>
 
       <ScrollView 
@@ -159,6 +186,14 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
     paddingHorizontal: 24,
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  headerTexts: {
+    flex: 1,
+  },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
@@ -168,6 +203,36 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: '#e0e7ff',
+  },
+  toggleButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  toggleIcon: {
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  toggleText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  devBadge: {
+    marginTop: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  devBadgeText: {
+    color: '#fff',
+    fontSize: 11,
+    textAlign: 'center',
   },
   scrollContent: {
     padding: 16,

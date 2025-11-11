@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
@@ -9,20 +9,38 @@ interface AppConfigContextType {
   mode: AppMode;
   isOwnerMode: boolean;
   isClientMode: boolean;
+  toggleMode: () => void;
+  setMode: (mode: AppMode) => void;
 }
 
 const AppConfigContext = createContext<AppConfigContextType | undefined>(undefined);
 
 export function AppConfigProvider({ children }: { children: React.ReactNode }) {
-  // Em desenvolvimento, pode mudar manualmente aqui para testar
-  // Em produção, virá da variável de ambiente do build
-  const mode: AppMode = (Constants.expoConfig?.extra?.APP_MODE || 
-                         Platform.select({ web: 'client', default: 'client' })) as AppMode;
+  // Prioriza a variável de ambiente do build (para builds EAS)
+  // Se não houver, usa o estado local para desenvolvimento com Expo Go
+  const buildMode = Constants.expoConfig?.extra?.APP_MODE as AppMode | undefined;
+  const [devMode, setDevMode] = useState<AppMode>('client');
+  
+  const mode = buildMode || devMode;
+
+  const toggleMode = () => {
+    if (!buildMode) {
+      setDevMode(current => current === 'client' ? 'owner' : 'client');
+    }
+  };
+
+  const setModeManual = (newMode: AppMode) => {
+    if (!buildMode) {
+      setDevMode(newMode);
+    }
+  };
 
   const value = {
     mode,
     isOwnerMode: mode === 'owner',
     isClientMode: mode === 'client',
+    toggleMode,
+    setMode: setModeManual,
   };
 
   return (
