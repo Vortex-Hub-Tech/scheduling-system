@@ -1,42 +1,69 @@
+
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
-
-import { HapticTab } from '../components/HapticTab';
-import { IconSymbol } from '../components/ui/IconSymbol';
-import TabBarBackground from '../components/ui/TabBarBackground';
-import { Colors } from '../constants/Colors';
-import { useColorScheme } from '../hooks/useColorScheme';
+import { useAppConfig } from '../contexts/AppConfigContext';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { isOwnerMode } = useAppConfig();
+
+  if (isOwnerMode) {
+    return (
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: '#2563eb',
+          headerShown: false,
+          tabBarStyle: Platform.select({
+            ios: {
+              position: 'absolute',
+            },
+            default: {},
+          }),
+        }}
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Dashboard',
+            tabBarIcon: ({ color }) => <span style={{ fontSize: 24 }}>📊</span>,
+          }}
+        />
+        <Tabs.Screen
+          name="explore"
+          options={{
+            title: 'Gerenciar',
+            tabBarIcon: ({ color }) => <span style={{ fontSize: 24 }}>⚙️</span>,
+          }}
+        />
+      </Tabs>
+    );
+  }
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: '#2563eb',
         headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
           ios: {
             position: 'absolute',
           },
           default: {},
         }),
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Início',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color }) => <span style={{ fontSize: 24 }}>🏠</span>,
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
           title: 'Serviços',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="scissors" color={color} />,
+          tabBarIcon: ({ color }) => <span style={{ fontSize: 24 }}>✂️</span>,
         }}
       />
     </Tabs>

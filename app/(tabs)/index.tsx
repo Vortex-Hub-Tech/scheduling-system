@@ -1,171 +1,256 @@
+
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../contexts/AuthContext';
+import { useAppConfig } from '../contexts/AppConfigContext';
 
-export default function HomeScreen() {
+export default function DashboardScreen() {
   const router = useRouter();
-  const { isOwner, logout } = useAuth();
+  const { isOwnerMode } = useAppConfig();
 
-  const handleWhatsApp = () => {
-    const phone = '5547996885117';
-    const message = encodeURIComponent('Olá! Gostaria de mais informações sobre os serviços.');
-    Linking.openURL(`whatsapp://send?phone=${phone}&text=${message}`);
-  };
+  if (isOwnerMode) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Dashboard</Text>
+          <Text style={styles.headerSubtitle}>Visão geral do seu negócio</Text>
+        </View>
 
-  const handleOwnerAccess = () => {
-    if (isOwner) {
-      logout();
-    } else {
-      router.push('/owner-login');
-    }
-  };
+        <ScrollView style={styles.content}>
+          <View style={styles.statsGrid}>
+            <View style={[styles.statCard, { backgroundColor: '#667eea' }]}>
+              <Text style={styles.statIcon}>📅</Text>
+              <Text style={styles.statValue}>--</Text>
+              <Text style={styles.statLabel}>Agendamentos Hoje</Text>
+            </View>
+            <View style={[styles.statCard, { backgroundColor: '#f093fb' }]}>
+              <Text style={styles.statIcon}>⏳</Text>
+              <Text style={styles.statValue}>--</Text>
+              <Text style={styles.statLabel}>Pendentes</Text>
+            </View>
+            <View style={[styles.statCard, { backgroundColor: '#4facfe' }]}>
+              <Text style={styles.statIcon}>✅</Text>
+              <Text style={styles.statValue}>--</Text>
+              <Text style={styles.statLabel}>Confirmados</Text>
+            </View>
+            <View style={[styles.statCard, { backgroundColor: '#43e97b' }]}>
+              <Text style={styles.statIcon}>💰</Text>
+              <Text style={styles.statValue}>R$ --</Text>
+              <Text style={styles.statLabel}>Receita do Mês</Text>
+            </View>
+          </View>
+
+          <View style={styles.quickActions}>
+            <Text style={styles.sectionTitle}>Ações Rápidas</Text>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => router.push('/explore')}
+            >
+              <Text style={styles.actionIcon}>➕</Text>
+              <Text style={styles.actionText}>Novo Serviço</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => router.push('/my-bookings')}
+            >
+              <Text style={styles.actionIcon}>📋</Text>
+              <Text style={styles.actionText}>Ver Agendamentos</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Bem-vindo!</Text>
-        <Text style={styles.subtitle}>
-          Escolha entre nossos serviços profissionais e agende com facilidade
-        </Text>
-        <TouchableOpacity style={styles.ownerButton} onPress={handleOwnerAccess}>
-          <Text style={styles.ownerText}>
-            {isOwner ? '🚪 Sair do modo proprietário' : '🔐 Sou proprietário'}
-          </Text>
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Bem-vindo!</Text>
+        <Text style={styles.headerSubtitle}>O que você gostaria de fazer?</Text>
       </View>
 
-      <View style={styles.cardsContainer}>
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => router.push('/services')}
+      <ScrollView style={styles.content}>
+        <TouchableOpacity 
+          style={styles.heroCard}
+          onPress={() => router.push('/explore')}
         >
-          <Text style={styles.cardIcon}>✂️</Text>
-          <Text style={styles.cardTitle}>Ver Serviços</Text>
-          <Text style={styles.cardDescription}>
-            Explore todos os serviços disponíveis
-          </Text>
+          <Text style={styles.heroIcon}>✂️</Text>
+          <Text style={styles.heroTitle}>Agendar Serviço</Text>
+          <Text style={styles.heroText}>Escolha um serviço e agende agora mesmo</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => router.push('/gallery')}
-        >
-          <Text style={styles.cardIcon}>🖼️</Text>
-          <Text style={styles.cardTitle}>Galeria</Text>
-          <Text style={styles.cardDescription}>
-            Veja nosso portfólio de trabalhos
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => router.push('/reviews')}
-        >
-          <Text style={styles.cardIcon}>⭐</Text>
-          <Text style={styles.cardTitle}>Avaliações</Text>
-          <Text style={styles.cardDescription}>
-            Confira o que dizem nossos clientes
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => router.push('/my-bookings')}
-        >
-          <Text style={styles.cardIcon}>📋</Text>
-          <Text style={styles.cardTitle}>Meus Agendamentos</Text>
-          <Text style={styles.cardDescription}>
-            Veja seus agendamentos
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity style={styles.whatsappButton} onPress={handleWhatsApp}>
-        <Text style={styles.whatsappIcon}>💬</Text>
-        <Text style={styles.whatsappText}>Fale Conosco</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <View style={styles.featuresGrid}>
+          <TouchableOpacity 
+            style={styles.featureCard}
+            onPress={() => router.push('/my-bookings')}
+          >
+            <Text style={styles.featureIcon}>📅</Text>
+            <Text style={styles.featureTitle}>Meus Agendamentos</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.featureCard}
+            onPress={() => router.push('/gallery')}
+          >
+            <Text style={styles.featureIcon}>🖼️</Text>
+            <Text style={styles.featureTitle}>Galeria</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.featureCard}
+            onPress={() => router.push('/reviews')}
+          >
+            <Text style={styles.featureIcon}>⭐</Text>
+            <Text style={styles.featureTitle}>Avaliações</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8fafc',
   },
   header: {
-    padding: 24,
     backgroundColor: '#2563eb',
+    paddingTop: 60,
+    paddingBottom: 30,
+    paddingHorizontal: 24,
   },
-  title: {
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#e0e7ff',
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  statCard: {
+    width: '48%',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  statIcon: {
+    fontSize: 40,
+    marginBottom: 8,
+  },
+  statValue: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#f0f0f0',
     textAlign: 'center',
+  },
+  quickActions: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 16,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 12,
   },
-  subtitle: {
+  actionIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  actionText: {
     fontSize: 16,
+    color: '#1e293b',
+    fontWeight: '600',
+  },
+  heroCard: {
+    backgroundColor: '#2563eb',
+    borderRadius: 20,
+    padding: 32,
+    alignItems: 'center',
+    marginBottom: 24,
+    elevation: 5,
+    shadowColor: '#2563eb',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  heroIcon: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  heroTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  heroText: {
+    fontSize: 14,
     color: '#e0e7ff',
     textAlign: 'center',
   },
-  ownerButton: {
-    alignSelf: 'center',
-    marginTop: 16,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+  featuresGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
-  ownerText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  cardsContainer: {
-    padding: 16,
-    gap: 16,
-  },
-  card: {
+  featureCard: {
+    width: '48%',
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 24,
     alignItems: 'center',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    elevation: 3,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  cardIcon: {
-    fontSize: 48,
+  featureIcon: {
+    fontSize: 40,
     marginBottom: 12,
   },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1e293b',
-    marginBottom: 8,
-  },
-  cardDescription: {
+  featureTitle: {
     fontSize: 14,
-    color: '#64748b',
+    fontWeight: '600',
+    color: '#1e293b',
     textAlign: 'center',
-  },
-  whatsappButton: {
-    backgroundColor: '#25d366',
-    margin: 16,
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  whatsappIcon: {
-    fontSize: 24,
-  },
-  whatsappText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
   },
 });
